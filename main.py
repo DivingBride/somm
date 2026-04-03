@@ -2,6 +2,7 @@ import base64
 import os
 import re
 import sys
+import time
 import uuid
 from collections import defaultdict
 from pathlib import Path
@@ -266,23 +267,37 @@ async def ask(
     # Build messages list from history
     messages = list(session_history[session_id])
 
-    try:
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=2048,
-            temperature=0,
-            system=SYSTEM_PROMPT,
-            messages=messages,
-        )
-        answer = response.content[0].text
-    except Exception as e:
-        print(f"[somm] Anthropic API error: {e}", file=sys.stderr)
-        # Remove the user message we just added since the call failed
-        session_history[session_id].pop()
-        raise HTTPException(
-            status_code=500,
-            detail="The sommelier is unavailable right now. Please try again.",
-        )
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=2048,
+                temperature=0,
+                system=SYSTEM_PROMPT,
+                messages=messages,
+            )
+            answer = response.content[0].text
+            break
+        except anthropic.RateLimitError as e:
+            if attempt < max_retries - 1:
+                wait = (attempt + 1) * 30
+                print(f"[somm] Rate limited, retrying in {wait}s (attempt {attempt + 1}/{max_retries})")
+                time.sleep(wait)
+            else:
+                print(f"[somm] Rate limit exceeded after {max_retries} retries: {e}", file=sys.stderr)
+                session_history[session_id].pop()
+                raise HTTPException(
+                    status_code=503,
+                    detail="The sommelier is busy right now. Please wait a minute and try again.",
+                )
+        except Exception as e:
+            print(f"[somm] Anthropic API error: {e}", file=sys.stderr)
+            session_history[session_id].pop()
+            raise HTTPException(
+                status_code=500,
+                detail="The sommelier is unavailable right now. Please try again.",
+            )
 
     # Store assistant reply as plain text in history
     _add_to_history(session_id, "assistant", answer)
