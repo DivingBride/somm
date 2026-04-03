@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: somm
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
+      - key: SOMM_DATA_PATH
+        value: ./somm_data

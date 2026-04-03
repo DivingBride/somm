@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Sommelier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --text: #1a1a1a;
+      --accent: #8b1a1a;
+      --accent-light: #a52020;
+      --user-bg: #ebebeb;
+      --assistant-bg: #ffffff;
+      --border: #ddd;
+      --input-border: #ccc;
+      --error: #c0392b;
+      --muted: #888;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ── Auth overlay ── */
+    #auth-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    #auth-overlay.hidden { display: none; }
+
+    .auth-box {
+      width: 100%; max-width: 380px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .auth-box h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.3rem;
+    }
+    .auth-box p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+    .auth-box input[type="password"] {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      font-size: 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      margin-bottom: 0.8rem;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .auth-box input[type="password"]:focus { border-color: var(--accent); }
+    .auth-box button {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .auth-box button:hover { background: var(--accent-light); }
+    #auth-error {
+      margin-top: 0.6rem;
+      font-size: 0.85rem;
+      color: var(--error);
+      min-height: 1.2em;
+    }
+
+    /* ── App shell ── */
+    #app {
+      display: flex; flex-direction: column;
+      height: 100vh;
+    }
+    #app.hidden { display: none; }
+
+    /* Header */
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 0.9rem 1.2rem;
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    header p {
+      font-size: 0.78rem;
+      opacity: 0.8;
+      margin-top: 0.1rem;
+    }
+
+    /* Chat thread */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .message {
+      max-width: 82%;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      line-height: 1.55;
+      font-size: 0.93rem;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: var(--user-bg);
+      border-bottom-right-radius: 3px;
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background: var(--assistant-bg);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 3px;
+    }
+    .message.error {
+      align-self: flex-start;
+      background: #fff5f5;
+      border: 1px solid #f5c6cb;
+      color: var(--error);
+    }
+
+    /* Markdown inside assistant messages */
+    .message.assistant h1, .message.assistant h2, .message.assistant h3 {
+      font-family: 'Cormorant Garamond', serif;
+      margin: 0.8rem 0 0.3rem;
+    }
+    .message.assistant h1 { font-size: 1.3rem; }
+    .message.assistant h2 { font-size: 1.15rem; }
+    .message.assistant h3 { font-size: 1.05rem; }
+    .message.assistant p { margin-bottom: 0.5rem; }
+    .message.assistant p:last-child { margin-bottom: 0; }
+    .message.assistant ul, .message.assistant ol {
+      padding-left: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+    .message.assistant li { margin-bottom: 0.2rem; }
+    .message.assistant strong { font-weight: 600; }
+    .message.assistant em { font-style: italic; }
+    .message.assistant code {
+      background: #f0ede8;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+      font-size: 0.88em;
+    }
+    .message.assistant blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 0.8rem;
+      margin: 0.4rem 0;
+      color: #555;
+      font-style: italic;
+    }
+
+    /* Typing indicator */
+    .typing {
+      align-self: flex-start;
+      background: var(--assistant-bg);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 3px;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      display: flex; gap: 5px; align-items: center;
+    }
+    .typing span {
+      width: 7px; height: 7px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* Input bar */
+    #input-bar {
+      flex-shrink: 0;
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.8rem 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    #question {
+      flex: 1;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      resize: none;
+      outline: none;
+      line-height: 1.4;
+      max-height: 120px;
+      overflow-y: auto;
+      transition: border-color 0.15s;
+    }
+    #question:focus { border-color: var(--accent); }
+    #send-btn {
+      padding: 0.6rem 1.1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      align-self: flex-end;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    #send-btn:hover { background: var(--accent-light); }
+    #send-btn:disabled { background: #bbb; cursor: default; }
+
+    @media (max-width: 480px) {
+      .message { max-width: 95%; }
+      header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Auth overlay -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <h1>🍷 The Sommelier</h1>
+    <p>Molecular pairing by Chartier</p>
+    <input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" />
+    <button id="auth-btn">Enter</button>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app" class="hidden">
+  <header>
+    <h1>🍷 The Sommelier</h1>
+    <p>Molecular pairing by Chartier</p>
+  </header>
+  <div id="chat"></div>
+  <div id="input-bar">
+    <textarea id="question" rows="1" placeholder="Ask about wine and food pairing…"></textarea>
+    <button id="send-btn">Ask</button>
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  const SESSION_ID = crypto.randomUUID();
+  let password = sessionStorage.getItem('somm_password') || '';
+  let sending = false;
+
+  // ── marked config ──
+  marked.setOptions({ breaks: true });
+
+  // ── DOM refs ──
+  const authOverlay = document.getElementById('auth-overlay');
+  const authError   = document.getElementById('auth-error');
+  const passInput   = document.getElementById('password-input');
+  const authBtn     = document.getElementById('auth-btn');
+  const appEl       = document.getElementById('app');
+  const chatEl      = document.getElementById('chat');
+  const questionEl  = document.getElementById('question');
+  const sendBtn     = document.getElementById('send-btn');
+
+  // ── Auth ──
+  async function attemptAuth(pw) {
+    authError.textContent = '';
+    authBtn.disabled = true;
+    authBtn.textContent = 'Checking…';
+    try {
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${pw}`,
+          'X-Session-ID': SESSION_ID,
+        },
+        body: JSON.stringify({ question: 'ping' }),
+      });
+      if (res.status === 401) {
+        authError.textContent = 'Incorrect password';
+        passInput.value = '';
+        passInput.focus();
+      } else {
+        // Success (any non-401 response means password was accepted)
+        sessionStorage.setItem('somm_password', pw);
+        password = pw;
+        showApp();
+      }
+    } catch {
+      authError.textContent = 'Connection error. Please try again.';
+    } finally {
+      authBtn.disabled = false;
+      authBtn.textContent = 'Enter';
+    }
+  }
+
+  function showApp() {
+    authOverlay.classList.add('hidden');
+    appEl.classList.remove('hidden');
+    addAssistantMessage(
+      'Ask me anything about wine and food pairing. For the most accurate answer, tell me: the main ingredient, any herbs or sauce, and the cooking method — for example, *"lamb, rosemary and garlic, roasted"*.'
+    );
+    questionEl.focus();
+  }
+
+  authBtn.addEventListener('click', () => {
+    const pw = passInput.value.trim();
+    if (pw) attemptAuth(pw);
+  });
+  passInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); authBtn.click(); }
+  });
+
+  // ── Chat helpers ──
+  function scrollToBottom() {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function addUserMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'message user';
+    div.textContent = text;
+    chatEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function addAssistantMessage(markdown) {
+    const div = document.createElement('div');
+    div.className = 'message assistant';
+    div.innerHTML = marked.parse(markdown);
+    chatEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function addErrorMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'message error';
+    div.textContent = text;
+    chatEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'typing';
+    div.id = 'typing-indicator';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chatEl.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function removeTyping() {
+    document.getElementById('typing-indicator')?.remove();
+  }
+
+  // ── Send ──
+  async function sendQuestion() {
+    if (sending) return;
+    const question = questionEl.value.trim();
+    if (!question) return;
+
+    sending = true;
+    sendBtn.disabled = true;
+    questionEl.value = '';
+    autoResize();
+
+    addUserMessage(question);
+    const typingEl = showTyping();
+
+    try {
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${password}`,
+          'X-Session-ID': SESSION_ID,
+        },
+        body: JSON.stringify({ question }),
+      });
+
+      removeTyping();
+
+      if (res.status === 401) {
+        sessionStorage.removeItem('somm_password');
+        addErrorMessage('Session expired. Please refresh the page to log in again.');
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        addErrorMessage(data.detail || 'An error occurred. Please try again.');
+        return;
+      }
+
+      const data = await res.json();
+      addAssistantMessage(data.answer);
+    } catch {
+      removeTyping();
+      addErrorMessage('Connection error. Please check your network and try again.');
+    } finally {
+      sending = false;
+      sendBtn.disabled = false;
+      questionEl.focus();
+    }
+  }
+
+  sendBtn.addEventListener('click', sendQuestion);
+
+  questionEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendQuestion();
+    }
+  });
+
+  // Auto-resize textarea
+  function autoResize() {
+    questionEl.style.height = 'auto';
+    questionEl.style.height = Math.min(questionEl.scrollHeight, 120) + 'px';
+  }
+  questionEl.addEventListener('input', autoResize);
+
+  // ── Init ──
+  if (password) {
+    showApp();
+  } else {
+    passInput.focus();
+  }
+</script>
+</body>
+</html>
