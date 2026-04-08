@@ -1,8 +1,8 @@
+import asyncio
 import base64
 import os
 import re
 import sys
-import time
 import uuid
 from collections import defaultdict
 from pathlib import Path
@@ -281,9 +281,9 @@ async def ask(
             break
         except anthropic.RateLimitError as e:
             if attempt < max_retries - 1:
-                wait = (attempt + 1) * 30
+                wait = (attempt + 1) * 65
                 print(f"[somm] Rate limited, retrying in {wait}s (attempt {attempt + 1}/{max_retries})")
-                time.sleep(wait)
+                await asyncio.sleep(wait)
             else:
                 print(f"[somm] Rate limit exceeded after {max_retries} retries: {e}", file=sys.stderr)
                 session_history[session_id].pop()
