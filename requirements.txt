@@ -3,3 +3,8 @@ uvicorn[standard]==0.30.6
 anthropic==0.40.0
 python-dotenv==1.0.1
 python-multipart==0.0.12
+sqlalchemy[asyncio]==2.0.36
+aiosqlite==0.20.0
+alembic==1.14.0
+resend==2.7.0
+itsdangerous==2.2.0
