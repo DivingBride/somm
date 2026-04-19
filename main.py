@@ -219,10 +219,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Phase 0: wire magic-link auth routes. The old APP_PASSWORD-bearer flow on
 # /ask is kept in parallel during the v1 → v2 transition (§11 step 2).
+import admin  # noqa: E402
 import auth  # noqa: E402
 import bootstrap  # noqa: E402
 
 app.include_router(auth.router)
+app.include_router(admin.router)
 
 
 @app.on_event("startup")
@@ -244,6 +246,14 @@ async def index():
 @app.get("/login")
 async def login_page():
     return FileResponse("static/login.html")
+
+
+@app.get("/admin")
+async def admin_page():
+    # The page itself fetches /api/me and redirects non-admins to /login.
+    # Gating here at the HTTP layer would require a user-facing 401/403 UI
+    # that we don't need for a static SPA shell.
+    return FileResponse("static/admin.html")
 
 
 @app.get("/health")
