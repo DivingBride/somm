@@ -217,6 +217,12 @@ def _add_to_history(session_id: str, role: str, content):
 app = FastAPI(title="The Sommelier")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Phase 0: wire magic-link auth routes. The old APP_PASSWORD-bearer flow on
+# /ask is kept in parallel during the v1 → v2 transition (§11 step 2).
+import auth  # noqa: E402
+
+app.include_router(auth.router)
+
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
