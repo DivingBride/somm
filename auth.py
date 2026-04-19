@@ -59,20 +59,28 @@ SESSION_TTL = timedelta(days=365)          # 1 year rolling (private-circle tuni
                                            # to minimise cookie-loss lockouts for the
                                            # ~5-user founder circle with no Resend).
 
+# Hard-coded dev fallback. Used ONLY when SESSION_SECRET env var is unset.
+# Production deployments MUST override via env. The app prints a loud warning
+# when this fallback is active so it cannot slip into prod unnoticed.
+_DEV_FALLBACK_SECRET = "somm-dev-only-session-secret-DO-NOT-USE-IN-PROD-xR4tQ8mNLk9pWz3vFj6YbHc2"
+
 _signer: Optional[URLSafeSerializer] = None
+_warned_about_dev_secret = False
 
 
 def _get_signer() -> URLSafeSerializer:
-    """Lazy-init the cookie signer so missing SESSION_SECRET fails loudly."""
-    global _signer
+    """Lazy-init the cookie signer. Falls back to a dev secret with a loud warning."""
+    global _signer, _warned_about_dev_secret
     if _signer is None:
-        if not SESSION_SECRET:
+        secret = SESSION_SECRET or _DEV_FALLBACK_SECRET
+        if not SESSION_SECRET and not _warned_about_dev_secret:
             print(
-                "[somm.auth] FATAL: SESSION_SECRET env var is required for cookie signing.",
+                "[somm.auth] ⚠️  SESSION_SECRET is not set — using dev fallback.\n"
+                "[somm.auth] ⚠️  DO NOT DEPLOY WITHOUT SETTING A REAL SESSION_SECRET env var.",
                 file=sys.stderr,
             )
-            raise RuntimeError("SESSION_SECRET is not set")
-        _signer = URLSafeSerializer(SESSION_SECRET, salt="somm-session-cookie")
+            _warned_about_dev_secret = True
+        _signer = URLSafeSerializer(secret, salt="somm-session-cookie")
     return _signer
 
 
