@@ -52,9 +52,12 @@ APP_URL = os.environ.get("APP_URL", "http://localhost:8000").rstrip("/")
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() == "true"
 
 COOKIE_NAME = "somm_session"
-COOKIE_MAX_AGE = 60 * 60 * 24 * 30        # 30 days
+COOKIE_MAX_AGE = 60 * 60 * 24 * 365       # 1 year (private-circle tuning)
 MAGIC_LINK_TTL = timedelta(minutes=15)     # §5 — 15-minute expiry
-SESSION_TTL = timedelta(days=30)           # §5 — 30-day rolling
+SESSION_TTL = timedelta(days=365)          # 1 year rolling (private-circle tuning;
+                                           # spec §5 specified 30 days, extended here
+                                           # to minimise cookie-loss lockouts for the
+                                           # ~5-user founder circle with no Resend).
 
 _signer: Optional[URLSafeSerializer] = None
 
