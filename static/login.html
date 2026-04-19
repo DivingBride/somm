@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in · Somm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --text: #1a1a1a;
+      --accent: #8b1a1a;
+      --accent-light: #a52020;
+      --border: #ddd;
+      --input-border: #ccc;
+      --muted: #888;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      font-size: 2.25rem;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+      text-align: center;
+    }
+
+    .tagline {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="email"] {
+      width: 100%;
+      padding: 0.75rem 0.9rem;
+      font-size: 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    input[type="email"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    button {
+      width: 100%;
+      margin-top: 1.25rem;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-family: inherit;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    button:hover:not(:disabled) { background: var(--accent-light); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .message {
+      margin-top: 1.25rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .message.ok {
+      background: #f2f7f2;
+      border: 1px solid #cfe0cf;
+      color: #2a5a2a;
+    }
+
+    .message.error {
+      background: #fbecec;
+      border: 1px solid #e9c7c7;
+      color: #7a2020;
+    }
+
+    .footnote {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Somm</h1>
+    <p class="tagline">Enter your email to receive a sign-in link.</p>
+
+    <form id="login-form" novalidate>
+      <label for="email">Email</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        required
+        autocomplete="email"
+        autofocus
+        placeholder="you@example.com"
+      />
+      <button type="submit" id="submit-btn">Send sign-in link</button>
+    </form>
+
+    <div id="message" class="message" hidden></div>
+
+    <p class="footnote">Invite-only · private circle</p>
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submit-btn');
+    const message = document.getElementById('message');
+
+    function showMessage(text, kind) {
+      message.textContent = text;
+      message.className = 'message ' + kind;
+      message.hidden = false;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      if (!email) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      message.hidden = true;
+
+      try {
+        const r = await fetch('/api/auth/magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (r.ok) {
+          const data = await r.json();
+          showMessage(
+            data.message ||
+            "If that email is registered, we've sent a sign-in link.",
+            'ok'
+          );
+          emailInput.value = '';
+        } else {
+          const data = await r.json().catch(() => ({}));
+          showMessage(
+            data.detail || 'Something went wrong. Please try again.',
+            'error'
+          );
+        }
+      } catch (err) {
+        showMessage('Network error. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send sign-in link';
+      }
+    });
+  </script>
+</body>
+</html>

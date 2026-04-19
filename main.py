@@ -220,8 +220,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Phase 0: wire magic-link auth routes. The old APP_PASSWORD-bearer flow on
 # /ask is kept in parallel during the v1 → v2 transition (§11 step 2).
 import auth  # noqa: E402
+import bootstrap  # noqa: E402
 
 app.include_router(auth.router)
+
+
+@app.on_event("startup")
+async def _on_startup() -> None:
+    await bootstrap.seed_admin_if_needed()
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -233,6 +239,11 @@ class AskRequest(BaseModel):
 @app.get("/")
 async def index():
     return FileResponse("static/index.html")
+
+
+@app.get("/login")
+async def login_page():
+    return FileResponse("static/login.html")
 
 
 @app.get("/health")
