@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · Somm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --panel: #ffffff;
+      --text: #1a1a1a;
+      --accent: #8b1a1a;
+      --accent-light: #a52020;
+      --border: #ddd;
+      --input-border: #ccc;
+      --muted: #888;
+      --danger: #c0392b;
+      --ok-bg: #f2f7f2;
+      --ok-border: #cfe0cf;
+      --ok-text: #2a5a2a;
+      --err-bg: #fbecec;
+      --err-border: #e9c7c7;
+      --err-text: #7a2020;
+      --row-alt: #fafafa;
+      --revoked: #a0a0a0;
+    }
+
+    html, body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 2rem 2rem 4rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding-bottom: 1.25rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      font-size: 2rem;
+      color: var(--accent);
+    }
+    h1 .subtle {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-left: 0.6rem;
+      letter-spacing: 0.02em;
+    }
+    header nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-left: 1.25rem;
+    }
+    header nav a:hover { color: var(--accent); }
+    header nav .me {
+      color: var(--text);
+      margin-right: 0.5rem;
+    }
+
+    /* Sections */
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    section h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    /* Forms */
+    form.inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: flex-end;
+      margin-bottom: 1.25rem;
+      padding: 1rem;
+      background: var(--row-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    form.inline .field { display: flex; flex-direction: column; flex: 1; min-width: 160px; }
+    form.inline label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    input[type="text"], input[type="email"], input[type="number"], select {
+      padding: 0.55rem 0.7rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--input-border);
+      border-radius: 5px;
+      font-family: inherit;
+      background: #fff;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+    button {
+      font-family: inherit;
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 0.55rem 0.9rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      transition: background 0.15s ease;
+    }
+    button:hover:not(:disabled) { background: var(--accent-light); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--input-border);
+    }
+    button.secondary:hover:not(:disabled) { background: var(--row-alt); border-color: var(--accent); color: var(--accent); }
+    button.danger { background: var(--danger); }
+    button.danger:hover:not(:disabled) { background: #a8342a; }
+    button.small { padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-right: 0.25rem; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    th {
+      font-weight: 500;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: var(--row-alt);
+    }
+    tr.revoked td { color: var(--revoked); }
+    tr.revoked td.actions { color: inherit; }
+    td.actions { white-space: nowrap; }
+    td.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+    td.muted { color: var(--muted); font-size: 0.82rem; }
+    .role-badge, .status-badge {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .role-badge.admin { background: #fde9e9; color: var(--accent); }
+    .role-badge.user { background: #eef0f3; color: #555; }
+    .status-badge.active { background: var(--ok-bg); color: var(--ok-text); }
+    .status-badge.revoked { background: #f0f0f0; color: var(--revoked); }
+
+    /* Messages */
+    .message {
+      padding: 0.75rem 0.95rem;
+      border-radius: 5px;
+      font-size: 0.88rem;
+      margin-bottom: 1rem;
+    }
+    .message.ok { background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--ok-text); }
+    .message.error { background: var(--err-bg); border: 1px solid var(--err-border); color: var(--err-text); }
+    .message[hidden] { display: none; }
+
+    /* Audit metadata cell */
+    td.meta {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-width: 300px;
+      word-break: break-all;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    .modal h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--accent);
+    }
+    .modal p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1rem; }
+    .modal .link-box {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+      background: var(--row-alt);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.75rem;
+      word-break: break-all;
+      margin-bottom: 1rem;
+    }
+    .modal .row { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+    /* Loading */
+    .loading { color: var(--muted); font-style: italic; font-size: 0.88rem; padding: 0.5rem 0; }
+
+    /* Audit filters */
+    .audit-controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+    .audit-controls input { flex: 1; min-width: 120px; }
+    .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; font-size: 0.85rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Somm <span class="subtle">admin</span></h1>
+      <nav>
+        <span class="me" id="me-label"></span>
+        <a href="/">Chat</a>
+        <a href="#" id="logout-link">Sign out</a>
+      </nav>
+    </header>
+
+    <div id="app" hidden>
+      <!-- Users -->
+      <section id="users-section">
+        <h2>Users</h2>
+        <div id="users-message" class="message" hidden></div>
+        <form id="create-user-form" class="inline" novalidate>
+          <div class="field">
+            <label for="cu-email">Email</label>
+            <input id="cu-email" type="email" required placeholder="friend@example.com" />
+          </div>
+          <div class="field">
+            <label for="cu-name">Display name</label>
+            <input id="cu-name" type="text" placeholder="(optional)" />
+          </div>
+          <div class="field" style="flex: 0 0 120px;">
+            <label for="cu-role">Role</label>
+            <select id="cu-role">
+              <option value="user" selected>User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button type="submit">Create user</button>
+        </form>
+        <div id="users-table-wrap" class="loading">Loading users…</div>
+      </section>
+
+      <!-- Invites -->
+      <section id="invites-section">
+        <h2>Invites</h2>
+        <div id="invites-message" class="message" hidden></div>
+        <form id="create-invite-form" class="inline" novalidate>
+          <div class="field">
+            <label for="ci-email">Pin to email (optional)</label>
+            <input id="ci-email" type="email" placeholder="(any email can accept)" />
+          </div>
+          <div class="field" style="flex: 0 0 140px;">
+            <label for="ci-days">Expires in (days)</label>
+            <input id="ci-days" type="number" min="1" max="60" value="7" />
+          </div>
+          <button type="submit">Create invite</button>
+        </form>
+        <div id="invites-table-wrap" class="loading">Loading invites…</div>
+      </section>
+
+      <!-- Audit log -->
+      <section id="audit-section">
+        <h2>Audit log</h2>
+        <div class="audit-controls">
+          <input id="audit-action" type="text" placeholder="Filter by action (e.g. user_revoked)" />
+          <input id="audit-actor" type="text" placeholder="Filter by actor user id" />
+          <button class="secondary" id="audit-refresh">Apply</button>
+        </div>
+        <div id="audit-table-wrap" class="loading">Loading audit log…</div>
+        <div class="pagination">
+          <span id="audit-total"></span>
+          <button class="secondary" id="audit-more" hidden>Load more</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="access-denied" class="message error" hidden style="margin-top: 2rem;">
+      You must be an admin to view this page. <a href="/login">Sign in</a>.
+    </div>
+  </div>
+
+  <!-- Magic-link modal -->
+  <div id="ml-modal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <h3>Sign-in link</h3>
+      <p>Copy this link and send it to the user via iMessage, WhatsApp, or any channel you like. It expires in <span id="ml-expiry">15</span> minutes and can only be used once.</p>
+      <div class="link-box" id="ml-url"></div>
+      <div class="row">
+        <button class="secondary" id="ml-copy">Copy</button>
+        <button id="ml-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite-link modal -->
+  <div id="inv-modal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <h3>Invite link</h3>
+      <p>Share this link with the person you're inviting. They'll enter their email and display name to create an account.</p>
+      <div class="link-box" id="inv-url"></div>
+      <div class="row">
+        <button class="secondary" id="inv-copy">Copy</button>
+        <button id="inv-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- helpers ----------
+    async function api(method, path, body) {
+      const r = await fetch(path, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : null,
+        credentials: 'same-origin',
+      });
+      let data = null;
+      try { data = await r.json(); } catch (_) {}
+      if (!r.ok) {
+        const msg = (data && data.detail) || r.statusText || 'Request failed';
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        });
+      } catch (_) { return iso; }
+    }
+
+    function showMessage(el, text, kind) {
+      el.textContent = text;
+      el.className = 'message ' + kind;
+      el.hidden = false;
+      setTimeout(() => { el.hidden = true; }, 6000);
+    }
+
+    function esc(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (_) {
+        // Fallback for insecure contexts — build a hidden textarea.
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); return true; }
+        catch (_) { return false; }
+        finally { document.body.removeChild(ta); }
+      }
+    }
+
+    // ---------- auth gate ----------
+    let me = null;
+    let userById = {};
+    async function gate() {
+      try {
+        me = await api('GET', '/api/me');
+      } catch (_) {
+        window.location.href = '/login';
+        return false;
+      }
+      if (me.role !== 'admin') {
+        document.getElementById('access-denied').hidden = false;
+        return false;
+      }
+      document.getElementById('me-label').textContent = me.email;
+      document.getElementById('app').hidden = false;
+      return true;
+    }
+
+    // ---------- users ----------
+    async function renderUsers() {
+      const wrap = document.getElementById('users-table-wrap');
+      wrap.innerHTML = '<div class="loading">Loading users…</div>';
+      try {
+        const { users } = await api('GET', '/api/admin/users');
+        userById = Object.fromEntries(users.map(u => [u.id, u]));
+        if (users.length === 0) {
+          wrap.innerHTML = '<p class="loading">No users yet.</p>';
+          return;
+        }
+        const rows = users.map(u => {
+          const revokedCls = u.status === 'revoked' ? ' class="revoked"' : '';
+          const actions = u.status === 'active'
+            ? `<button class="small secondary" data-action="magic-link" data-id="${esc(u.id)}">Sign-in link</button>` +
+              (u.id === me.id
+                ? ''
+                : `<button class="small danger" data-action="revoke" data-id="${esc(u.id)}" data-email="${esc(u.email)}">Revoke</button>`)
+            : '';
+          return `
+            <tr${revokedCls}>
+              <td>${esc(u.email)}</td>
+              <td>${esc(u.display_name || '')}</td>
+              <td><span class="role-badge ${esc(u.role)}">${esc(u.role)}</span></td>
+              <td><span class="status-badge ${esc(u.status)}">${esc(u.status)}</span></td>
+              <td class="muted">${fmtDate(u.last_login_at)}</td>
+              <td class="muted">${fmtDate(u.created_at)}</td>
+              <td class="actions">${actions}</td>
+            </tr>`;
+        }).join('');
+        wrap.innerHTML = `
+          <table>
+            <thead><tr>
+              <th>Email</th><th>Display name</th><th>Role</th><th>Status</th>
+              <th>Last login</th><th>Created</th><th>Actions</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      } catch (e) {
+        wrap.innerHTML = `<div class="message error">${esc(e.message)}</div>`;
+      }
+    }
+
+    document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('cu-email').value.trim();
+      const display_name = document.getElementById('cu-name').value.trim() || null;
+      const role = document.getElementById('cu-role').value;
+      const msg = document.getElementById('users-message');
+      try {
+        await api('POST', '/api/admin/users', { email, display_name, role });
+        showMessage(msg, `Created ${email}.`, 'ok');
+        document.getElementById('create-user-form').reset();
+        await renderUsers();
+        await renderAudit();
+      } catch (e) {
+        showMessage(msg, e.message, 'error');
+      }
+    });
+
+    document.getElementById('users-table-wrap').addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      const msg = document.getElementById('users-message');
+      if (action === 'magic-link') {
+        try {
+          const res = await api('POST', `/api/admin/users/${id}/magic-link`);
+          showMagicLinkModal(res.url, res.expires_in_minutes);
+          await renderAudit();
+        } catch (e) { showMessage(msg, e.message, 'error'); }
+      } else if (action === 'revoke') {
+        const email = btn.dataset.email;
+        if (!confirm(`Revoke ${email}? Their session will end on their next request.`)) return;
+        try {
+          await api('POST', `/api/admin/users/${id}/revoke`);
+          showMessage(msg, `Revoked ${email}.`, 'ok');
+          await renderUsers();
+          await renderAudit();
+        } catch (e) { showMessage(msg, e.message, 'error'); }
+      }
+    });
+
+    // ---------- invites ----------
+    async function renderInvites() {
+      const wrap = document.getElementById('invites-table-wrap');
+      wrap.innerHTML = '<div class="loading">Loading invites…</div>';
+      try {
+        const { invites } = await api('GET', '/api/admin/invites');
+        if (invites.length === 0) {
+          wrap.innerHTML = '<p class="loading">No invites yet.</p>';
+          return;
+        }
+        const rows = invites.map(i => {
+          const tokenPreview = (i.token || '').slice(0, 12) + '…';
+          const status = i.used_at ? 'used' : 'pending';
+          const actions = !i.used_at
+            ? `<button class="small secondary" data-action="copy-invite" data-token="${esc(i.token)}">Copy link</button>
+               <button class="small danger" data-action="revoke-invite" data-id="${esc(i.id)}">Revoke</button>`
+            : '';
+          return `
+            <tr>
+              <td class="mono">${esc(tokenPreview)}</td>
+              <td>${esc(i.email || '(any email)')}</td>
+              <td class="muted">${fmtDate(i.expires_at)}</td>
+              <td><span class="status-badge ${status === 'used' ? 'revoked' : 'active'}">${status}</span></td>
+              <td class="actions">${actions}</td>
+            </tr>`;
+        }).join('');
+        wrap.innerHTML = `
+          <table>
+            <thead><tr>
+              <th>Token</th><th>Pinned email</th><th>Expires</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      } catch (e) {
+        wrap.innerHTML = `<div class="message error">${esc(e.message)}</div>`;
+      }
+    }
+
+    document.getElementById('create-invite-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('ci-email').value.trim() || null;
+      const days = parseInt(document.getElementById('ci-days').value, 10) || 7;
+      const msg = document.getElementById('invites-message');
+      try {
+        const res = await api('POST', '/api/admin/invites', { email, expires_in_days: days });
+        showInviteModal(res.share_url);
+        document.getElementById('create-invite-form').reset();
+        document.getElementById('ci-days').value = 7;
+        await renderInvites();
+        await renderAudit();
+      } catch (e) {
+        showMessage(msg, e.message, 'error');
+      }
+    });
+
+    document.getElementById('invites-table-wrap').addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const msg = document.getElementById('invites-message');
+      if (btn.dataset.action === 'copy-invite') {
+        const token = btn.dataset.token;
+        const url = window.location.origin + '/invite/' + token;
+        const ok = await copyToClipboard(url);
+        showMessage(msg, ok ? 'Invite link copied to clipboard.' : 'Copy failed — please copy manually.', ok ? 'ok' : 'error');
+      } else if (btn.dataset.action === 'revoke-invite') {
+        if (!confirm('Revoke this invite?')) return;
+        try {
+          await api('DELETE', `/api/admin/invites/${btn.dataset.id}`);
+          showMessage(msg, 'Invite revoked.', 'ok');
+          await renderInvites();
+          await renderAudit();
+        } catch (e) { showMessage(msg, e.message, 'error'); }
+      }
+    });
+
+    // ---------- audit ----------
+    let auditOffset = 0;
+    const AUDIT_PAGE = 50;
+
+    async function renderAudit(reset = true) {
+      const wrap = document.getElementById('audit-table-wrap');
+      const totalEl = document.getElementById('audit-total');
+      const moreBtn = document.getElementById('audit-more');
+      if (reset) auditOffset = 0;
+
+      const action = document.getElementById('audit-action').value.trim();
+      const actor = document.getElementById('audit-actor').value.trim();
+      const params = new URLSearchParams({ limit: String(AUDIT_PAGE), offset: String(auditOffset) });
+      if (action) params.set('action', action);
+      if (actor) params.set('actor_user_id', actor);
+
+      if (reset) wrap.innerHTML = '<div class="loading">Loading audit log…</div>';
+      try {
+        const res = await api('GET', '/api/admin/audit?' + params.toString());
+        const rowsHtml = res.events.map(ev => {
+          const actorEmail = userById[ev.actor_user_id]?.email || ev.actor_user_id || '—';
+          return `
+            <tr>
+              <td class="muted">${fmtDate(ev.created_at)}</td>
+              <td><span class="role-badge user">${esc(ev.action || '')}</span></td>
+              <td class="muted">${esc(actorEmail)}</td>
+              <td class="muted">${esc(ev.target_type || '')} ${esc((ev.target_id || '').slice(0, 8))}</td>
+              <td class="meta">${esc(ev.metadata_json || '')}</td>
+            </tr>`;
+        }).join('');
+        if (reset) {
+          wrap.innerHTML = `
+            <table>
+              <thead><tr>
+                <th>When</th><th>Action</th><th>Actor</th><th>Target</th><th>Metadata</th>
+              </tr></thead>
+              <tbody id="audit-tbody">${rowsHtml}</tbody>
+            </table>`;
+        } else {
+          document.getElementById('audit-tbody').insertAdjacentHTML('beforeend', rowsHtml);
+        }
+        auditOffset += res.events.length;
+        totalEl.textContent = `${auditOffset} of ${res.total} event${res.total === 1 ? '' : 's'}`;
+        moreBtn.hidden = auditOffset >= res.total;
+      } catch (e) {
+        wrap.innerHTML = `<div class="message error">${esc(e.message)}</div>`;
+      }
+    }
+
+    document.getElementById('audit-refresh').addEventListener('click', () => renderAudit(true));
+    document.getElementById('audit-more').addEventListener('click', () => renderAudit(false));
+
+    // ---------- modals ----------
+    function showMagicLinkModal(url, minutes) {
+      document.getElementById('ml-url').textContent = url;
+      document.getElementById('ml-expiry').textContent = String(minutes || 15);
+      document.getElementById('ml-modal').hidden = false;
+    }
+    function showInviteModal(url) {
+      document.getElementById('inv-url').textContent = url;
+      document.getElementById('inv-modal').hidden = false;
+    }
+    document.getElementById('ml-close').addEventListener('click', () => {
+      document.getElementById('ml-modal').hidden = true;
+    });
+    document.getElementById('inv-close').addEventListener('click', () => {
+      document.getElementById('inv-modal').hidden = true;
+    });
+    document.getElementById('ml-copy').addEventListener('click', async () => {
+      const ok = await copyToClipboard(document.getElementById('ml-url').textContent);
+      const btn = document.getElementById('ml-copy');
+      btn.textContent = ok ? 'Copied!' : 'Copy failed';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+    });
+    document.getElementById('inv-copy').addEventListener('click', async () => {
+      const ok = await copyToClipboard(document.getElementById('inv-url').textContent);
+      const btn = document.getElementById('inv-copy');
+      btn.textContent = ok ? 'Copied!' : 'Copy failed';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+    });
+
+    // ---------- logout ----------
+    document.getElementById('logout-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { await api('POST', '/api/auth/logout'); } catch (_) {}
+      window.location.href = '/login';
+    });
+
+    // ---------- boot ----------
+    (async () => {
+      const ok = await gate();
+      if (!ok) return;
+      // Users needs to finish before audit so userById is populated for rendering actor emails.
+      await renderUsers();
+      await Promise.all([renderInvites(), renderAudit(true)]);
+    })();
+  </script>
+</body>
+</html>
