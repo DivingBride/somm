@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New pairing · Somm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --panel: #ffffff;
+      --text: #1a1a1a;
+      --accent: #8b1a1a;
+      --accent-light: #a52020;
+      --border: #ddd;
+      --input-border: #ccc;
+      --muted: #888;
+      --error: #c0392b;
+    }
+
+    html, body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+    }
+
+    .page-header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      flex: 1;
+    }
+    .page-header a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .page-header a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 700px;
+      margin: 2rem auto 3rem;
+      padding: 0 1.5rem;
+    }
+
+    .intro {
+      font-size: 0.92rem;
+      color: #444;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    form {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .field label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .field .req { color: var(--accent); }
+    .field input, .field textarea {
+      padding: 0.6rem 0.75rem;
+      font: inherit;
+      font-size: 0.95rem;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      background: #fff;
+      width: 100%;
+    }
+    .field textarea {
+      resize: vertical;
+      min-height: 4rem;
+    }
+    .field input:focus, .field textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+    button, a.cancel {
+      padding: 0.6rem 1.25rem;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    a.cancel {
+      color: var(--muted);
+      border: 1px solid var(--input-border);
+      background: #fff;
+    }
+    a.cancel:hover { border-color: var(--accent); color: var(--accent); }
+    button.primary {
+      color: #fff;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    button.primary:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent-light); }
+    button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .error-banner {
+      background: #fde8e8;
+      border: 1px solid #f3c3c3;
+      color: var(--error);
+      padding: 0.6rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      display: none;
+    }
+    .error-banner.visible { display: block; }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <h1>New pairing</h1>
+    <a href="/saved">&larr; Back to saved</a>
+  </header>
+
+  <div class="container">
+    <p class="intro">
+      Record a pairing you want to remember — from your own kitchen, a restaurant, or wherever.
+      The wine and the dish are required; everything else is optional.
+    </p>
+
+    <form id="new-form">
+      <div class="error-banner" id="error-banner"></div>
+
+      <div class="field">
+        <label for="wine">Wine <span class="req">*</span></label>
+        <input id="wine" name="wine" type="text" placeholder="e.g. Gewürztraminer, late harvest" required autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="dish">Dish <span class="req">*</span></label>
+        <input id="dish" name="dish" type="text" placeholder="e.g. Thai green curry" required autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="molecule_logic">Molecule logic</label>
+        <textarea id="molecule_logic" name="molecule_logic" placeholder="Why this works — shared aromatic molecules, textural echoes, etc."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="wine_examples">Wine examples</label>
+        <textarea id="wine_examples" name="wine_examples" placeholder="Specific bottles, producers, vintages you've tried or want to try."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="user_notes">My notes</label>
+        <textarea id="user_notes" name="user_notes" placeholder="Personal observations — how it tasted, occasion, adjustments for next time."></textarea>
+      </div>
+
+      <div class="actions">
+        <a href="/saved" class="cancel">Cancel</a>
+        <button type="submit" class="primary" id="submit-btn">Save pairing</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('new-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const errorEl = document.getElementById('error-banner');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.className = 'error-banner visible';
+    }
+    function clearError() {
+      errorEl.textContent = '';
+      errorEl.className = 'error-banner';
+    }
+
+    async function api(path, opts = {}) {
+      const r = await fetch(path, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        ...opts,
+      });
+      if (r.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+      if (!r.ok) {
+        let detail = 'Request failed';
+        try { detail = (await r.json()).detail || detail; } catch {}
+        throw new Error(detail);
+      }
+      return r.json();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const payload = {
+        source: 'custom',
+        wine: form.wine.value.trim(),
+        dish: form.dish.value.trim(),
+        molecule_logic: form.molecule_logic.value.trim() || null,
+        wine_examples: form.wine_examples.value.trim() || null,
+        user_notes: form.user_notes.value.trim() || null,
+      };
+
+      if (!payload.wine || !payload.dish) {
+        showError('Wine and dish are both required.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+      try {
+        await api('/api/saved', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        location.href = '/saved';
+      } catch (err) {
+        if (err.message !== 'unauthorized') {
+          showError(err.message || 'Save failed');
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save pairing';
+      }
+    });
+  </script>
+</body>
+</html>

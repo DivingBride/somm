@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preferences · Somm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --panel: #ffffff;
+      --text: #1a1a1a;
+      --accent: #8b1a1a;
+      --accent-light: #a52020;
+      --border: #ddd;
+      --input-border: #ccc;
+      --muted: #888;
+      --error: #c0392b;
+      --strict-bg: #fbecec;
+      --strict-border: #e9c7c7;
+      --strict-text: #7a2020;
+      --soft-bg: #f4f0e6;
+      --soft-border: #d7cfbc;
+      --soft-text: #6a5a2a;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .page-header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      flex: 1;
+    }
+    .page-header a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .page-header a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 880px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .intro {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #333;
+    }
+    .intro strong { color: var(--strict-text); }
+    .intro em { color: var(--soft-text); font-style: normal; font-weight: 500; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    form.new-pref {
+      display: grid;
+      grid-template-columns: 130px 1fr 150px;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    form.new-pref label { font-size: 0.8rem; color: var(--muted); display: block; margin-bottom: 0.2rem; }
+    form.new-pref select,
+    form.new-pref input[type="text"] {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      font: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      background: #fff;
+    }
+    form.new-pref select:focus,
+    form.new-pref input[type="text"]:focus {
+      outline: none; border-color: var(--accent);
+    }
+    form.new-pref .notes-row {
+      grid-column: 1 / -1;
+    }
+    form.new-pref .actions-row {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+    }
+    form.new-pref button {
+      padding: 0.6rem 1.2rem;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    form.new-pref button:hover:not(:disabled) { background: var(--accent-light); }
+    form.new-pref button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    table.prefs {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    table.prefs th,
+    table.prefs td {
+      text-align: left;
+      padding: 0.65rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    table.prefs th {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    table.prefs tr:last-child td { border-bottom: none; }
+
+    .pill {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 12px;
+      border: 1px solid;
+      cursor: pointer;
+    }
+    .pill.strict {
+      background: var(--strict-bg);
+      border-color: var(--strict-border);
+      color: var(--strict-text);
+    }
+    .pill.soft {
+      background: var(--soft-bg);
+      border-color: var(--soft-border);
+      color: var(--soft-text);
+    }
+
+    .row-actions button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+    }
+    .row-actions button:hover { text-decoration: underline; }
+    .row-actions button.danger { color: var(--error); }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+      padding: 0.8rem 0;
+      text-align: center;
+    }
+
+    .message {
+      margin-top: 1rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+    }
+    .message.ok { background: #f2f7f2; border: 1px solid #cfe0cf; color: #2a5a2a; }
+    .message.error { background: var(--strict-bg); border: 1px solid var(--strict-border); color: var(--strict-text); }
+    .message[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <h1>Preferences</h1>
+    <a href="/">&larr; Back to chat</a>
+  </header>
+
+  <div class="container">
+    <div class="intro">
+      Preferences shape every pairing. Mark a wine, grape, region, style, or
+      ingredient <strong>Strict</strong> to exclude it entirely, or
+      <em>Soft</em> to avoid it unless the molecular bridge is uniquely strong.
+      Claude will always explain when a preference conflicts with the
+      canonical Chartier pairing.
+    </div>
+
+    <section class="card">
+      <h2>Add a preference</h2>
+      <form class="new-pref" id="new-pref-form" novalidate>
+        <div>
+          <label for="pref-kind">Kind</label>
+          <select id="pref-kind" required>
+            <option value="wine">Wine</option>
+            <option value="grape">Grape</option>
+            <option value="region">Region</option>
+            <option value="style">Style</option>
+            <option value="ingredient">Ingredient</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="pref-value">Value</label>
+          <input id="pref-value" type="text" placeholder="e.g. Gewürztraminer" required />
+        </div>
+        <div>
+          <label for="pref-strictness">Strictness</label>
+          <select id="pref-strictness" required>
+            <option value="strict">Strict — never suggest</option>
+            <option value="soft">Soft — prefer to avoid</option>
+          </select>
+        </div>
+        <div class="notes-row">
+          <label for="pref-notes">Note (optional)</label>
+          <input id="pref-notes" type="text" placeholder="Why? Short context for the sommelier." />
+        </div>
+        <div class="actions-row">
+          <button type="submit" id="add-btn">Add preference</button>
+        </div>
+      </form>
+      <div id="new-pref-msg" class="message" hidden></div>
+    </section>
+
+    <section class="card">
+      <h2>Your preferences</h2>
+      <div id="prefs-wrap"></div>
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById('new-pref-form');
+    const kindEl = document.getElementById('pref-kind');
+    const valueEl = document.getElementById('pref-value');
+    const strictnessEl = document.getElementById('pref-strictness');
+    const notesEl = document.getElementById('pref-notes');
+    const addBtn = document.getElementById('add-btn');
+    const addMsg = document.getElementById('new-pref-msg');
+    const prefsWrap = document.getElementById('prefs-wrap');
+
+    async function api(path, opts = {}) {
+      const r = await fetch(path, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        ...opts,
+      });
+      if (r.status === 401) {
+        location.href = '/login';
+        throw new Error('unauthorized');
+      }
+      if (!r.ok) {
+        let detail = 'Request failed';
+        try { detail = (await r.json()).detail || detail; } catch {}
+        throw new Error(detail);
+      }
+      if (r.status === 204) return null;
+      return r.json();
+    }
+
+    function showAddMessage(text, kind) {
+      addMsg.textContent = text;
+      addMsg.className = 'message ' + kind;
+      addMsg.hidden = false;
+      setTimeout(() => { addMsg.hidden = true; }, 3500);
+    }
+
+    function escapeHtml(s) {
+      return (s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    }
+
+    function render(prefs) {
+      if (!prefs || prefs.length === 0) {
+        prefsWrap.innerHTML = '<div class="empty">No preferences yet. Add one above.</div>';
+        return;
+      }
+      const rows = prefs.map(p => `
+        <tr data-id="${p.id}">
+          <td>${escapeHtml(p.kind)}</td>
+          <td><strong>${escapeHtml(p.value)}</strong>${p.notes ? '<br><span style="color:var(--muted);font-size:0.85rem;">' + escapeHtml(p.notes) + '</span>' : ''}</td>
+          <td><button type="button" class="pill ${p.strictness}" data-role="toggle">${p.strictness === 'strict' ? 'Strict' : 'Soft'}</button></td>
+          <td class="row-actions"><button type="button" class="danger" data-role="delete">Delete</button></td>
+        </tr>
+      `).join('');
+      prefsWrap.innerHTML = `
+        <table class="prefs">
+          <thead>
+            <tr><th>Kind</th><th>Value</th><th>Strictness</th><th></th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    async function load() {
+      try {
+        const data = await api('/api/preferences');
+        render(data.preferences || []);
+      } catch (err) {
+        if (err.message !== 'unauthorized') {
+          prefsWrap.innerHTML = '<div class="empty" style="color:var(--error)">Could not load preferences.</div>';
+        }
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const value = valueEl.value.trim();
+      if (!value) {
+        showAddMessage('Please enter a value.', 'error');
+        return;
+      }
+      addBtn.disabled = true;
+      try {
+        await api('/api/preferences', {
+          method: 'POST',
+          body: JSON.stringify({
+            kind: kindEl.value,
+            value,
+            strictness: strictnessEl.value,
+            notes: notesEl.value.trim() || null,
+          }),
+        });
+        showAddMessage('Preference added.', 'ok');
+        valueEl.value = '';
+        notesEl.value = '';
+        await load();
+      } catch (err) {
+        showAddMessage(err.message || 'Could not add preference.', 'error');
+      } finally {
+        addBtn.disabled = false;
+      }
+    });
+
+    prefsWrap.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-role]');
+      if (!btn) return;
+      const row = btn.closest('tr[data-id]');
+      if (!row) return;
+      const id = row.dataset.id;
+      const role = btn.dataset.role;
+
+      if (role === 'toggle') {
+        const current = btn.classList.contains('strict') ? 'strict' : 'soft';
+        const next = current === 'strict' ? 'soft' : 'strict';
+        btn.disabled = true;
+        try {
+          await api('/api/preferences/' + encodeURIComponent(id), {
+            method: 'PATCH',
+            body: JSON.stringify({ strictness: next }),
+          });
+          await load();
+        } catch (err) {
+          btn.disabled = false;
+          alert(err.message || 'Could not toggle strictness.');
+        }
+      } else if (role === 'delete') {
+        if (!confirm('Delete this preference?')) return;
+        try {
+          await api('/api/preferences/' + encodeURIComponent(id), { method: 'DELETE' });
+          await load();
+        } catch (err) {
+          alert(err.message || 'Could not delete.');
+        }
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

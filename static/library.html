@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library · Somm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --panel: #ffffff;
+      --text: #1a1a1a;
+      --accent: #8b1a1a;
+      --accent-light: #a52020;
+      --border: #ddd;
+      --input-border: #ccc;
+      --muted: #888;
+      --error: #c0392b;
+      --tag-bg: #f3f1ec;
+      --tag-border: #d7cfbc;
+    }
+
+    html, body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+    }
+
+    .page-header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      flex: 1;
+    }
+    .page-header a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .page-header a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1180px;
+      margin: 1.5rem auto 3rem;
+      padding: 0 1.5rem;
+    }
+
+    .controls {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 220px 220px;
+      gap: 0.75rem;
+    }
+    .controls label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    .controls input, .controls select {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      font: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      background: #fff;
+    }
+    .controls input:focus, .controls select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .result-count {
+      grid-column: 1 / -1;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.15rem 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      color: #6a5a2a;
+      border-radius: 12px;
+      align-self: flex-start;
+    }
+
+    .card-wine {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+
+    .card-dish {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #222;
+    }
+
+    .card-logic {
+      font-size: 0.88rem;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .card-examples {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.45;
+      border-top: 1px dashed var(--border);
+      padding-top: 0.55rem;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .family-tag {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    button.save-btn {
+      padding: 0.45rem 0.9rem;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.save-btn:hover:not(:disabled) { background: var(--accent-light); }
+    button.save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    button.save-btn.saved { background: #4a7a4a; }
+
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      padding: 3rem 0;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+    }
+
+    .flash {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2a5a2a;
+      color: #fff;
+      padding: 0.7rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 100;
+    }
+    .flash.visible { opacity: 1; }
+    .flash.error { background: var(--error); }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <h1>Chartier Library</h1>
+    <a href="/saved">My saved pairings</a>
+    <a href="/">&larr; Back to chat</a>
+  </header>
+
+  <div class="container">
+    <div class="controls">
+      <div>
+        <label for="search-input">Search</label>
+        <input id="search-input" type="search" placeholder="mint, salmon, linalool…" autocomplete="off" />
+      </div>
+      <div>
+        <label for="style-filter">Wine style</label>
+        <select id="style-filter"><option value="">All styles</option></select>
+      </div>
+      <div>
+        <label for="family-filter">Molecule family</label>
+        <select id="family-filter"><option value="">All families</option></select>
+      </div>
+      <div class="result-count" id="result-count"></div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <div class="flash" id="flash"></div>
+
+  <script>
+    const searchEl = document.getElementById('search-input');
+    const styleEl = document.getElementById('style-filter');
+    const familyEl = document.getElementById('family-filter');
+    const cardsEl = document.getElementById('cards');
+    const countEl = document.getElementById('result-count');
+    const flashEl = document.getElementById('flash');
+
+    let debounceTimer = null;
+    let facetsLoaded = false;
+
+    async function api(path, opts = {}) {
+      const r = await fetch(path, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        ...opts,
+      });
+      if (r.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+      if (!r.ok) {
+        let detail = 'Request failed';
+        try { detail = (await r.json()).detail || detail; } catch {}
+        throw new Error(detail);
+      }
+      return r.json();
+    }
+
+    function flash(text, kind = 'ok') {
+      flashEl.textContent = text;
+      flashEl.className = 'flash visible' + (kind === 'error' ? ' error' : '');
+      setTimeout(() => { flashEl.className = 'flash'; }, 1800);
+    }
+
+    function escapeHtml(s) {
+      return (s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    }
+
+    function renderCards(entries) {
+      countEl.textContent = entries.length + ' pairing' + (entries.length === 1 ? '' : 's');
+      if (entries.length === 0) {
+        cardsEl.innerHTML = '<div class="empty">No pairings match these filters.</div>';
+        return;
+      }
+      cardsEl.innerHTML = entries.map(e => `
+        <article class="card" data-id="${e.id}">
+          <span class="badge">Chartier</span>
+          <div class="card-wine">${escapeHtml((e.wine_style || '').split('(')[0].trim())}</div>
+          <div class="card-dish">${escapeHtml(e.dish || '')}</div>
+          <div class="card-logic">${escapeHtml(e.molecule_logic || '')}</div>
+          <div class="card-examples">${escapeHtml(e.wine_examples || '')}</div>
+          <div class="card-footer">
+            <span class="family-tag">${escapeHtml(e.molecule_family || '')}</span>
+            <button class="save-btn" data-role="save">Save to my pairings</button>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function renderFacets(facets) {
+      if (facetsLoaded) return;
+      facetsLoaded = true;
+      for (const s of (facets.wine_styles || [])) {
+        const o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        styleEl.appendChild(o);
+      }
+      for (const f of (facets.molecule_families || [])) {
+        const o = document.createElement('option');
+        o.value = f; o.textContent = f;
+        familyEl.appendChild(o);
+      }
+    }
+
+    async function load() {
+      const params = new URLSearchParams();
+      if (searchEl.value.trim()) params.set('q', searchEl.value.trim());
+      if (styleEl.value) params.set('wine_style', styleEl.value);
+      if (familyEl.value) params.set('molecule_family', familyEl.value);
+      const qs = params.toString();
+      try {
+        const data = await api('/api/chartier' + (qs ? '?' + qs : ''));
+        renderFacets(data.facets || {});
+        renderCards(data.entries || []);
+      } catch (err) {
+        if (err.message !== 'unauthorized') {
+          cardsEl.innerHTML = '<div class="empty" style="color:var(--error)">Could not load the library.</div>';
+        }
+      }
+    }
+
+    function schedule() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(load, 200);
+    }
+
+    searchEl.addEventListener('input', schedule);
+    styleEl.addEventListener('change', load);
+    familyEl.addEventListener('change', load);
+
+    cardsEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-role="save"]');
+      if (!btn) return;
+      const card = btn.closest('.card[data-id]');
+      if (!card) return;
+      const id = card.dataset.id;
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await api('/api/saved', {
+          method: 'POST',
+          body: JSON.stringify({ source: 'chartier', source_ref: id }),
+        });
+        btn.classList.add('saved');
+        btn.textContent = 'Saved ✓';
+        flash('Pairing saved.');
+        setTimeout(() => {
+          btn.classList.remove('saved');
+          btn.textContent = 'Save to my pairings';
+          btn.disabled = false;
+        }, 1600);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Save to my pairings';
+        flash(err.message || 'Save failed', 'error');
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

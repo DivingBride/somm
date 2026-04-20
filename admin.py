@@ -28,8 +28,9 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import auth
+import chartier_sync
 from db import get_db
-from models import AuditLog, Invite, MagicLinkToken, User
+from models import AuditLog, Chat, Invite, MagicLinkToken, User
 
 router = APIRouter(prefix="/api/admin", dependencies=[Depends(auth.get_current_admin)])
 
@@ -221,6 +222,40 @@ async def generate_magic_link_for_user(
     }
 
 
+@router.get("/users/{user_id}/chats")
+async def list_user_chats(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin read-only view of a user's chats (§10). Returns both archived and
+    active chats so admins can spot deletions. Newest first.
+    """
+    user = await db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    result = await db.execute(
+        select(Chat)
+        .where(Chat.user_id == user_id)
+        .order_by(Chat.updated_at.desc().nullslast(), Chat.created_at.desc())
+    )
+    chats = result.scalars().all()
+    return {
+        "user": _user_dict(user),
+        "chats": [
+            {
+                "id": c.id,
+                "user_id": c.user_id,
+                "title": c.title,
+                "created_at": c.created_at,
+                "updated_at": c.updated_at,
+                "archived_at": c.archived_at,
+            }
+            for c in chats
+        ],
+    }
+
+
 # ---------------------------------------------------------------------------
 # Invites
 # ---------------------------------------------------------------------------
@@ -288,6 +323,31 @@ async def revoke_invite(
     )
     await db.commit()
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Chartier library sync
+# ---------------------------------------------------------------------------
+
+
+@router.post("/chartier/sync")
+async def chartier_sync_endpoint(
+    admin: User = Depends(auth.get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin-triggered re-ingestion of the Chartier xlsx (§8). Idempotent:
+    a second call with an unchanged spreadsheet is a no-op (everything
+    shows up as `unchanged`). The sync function writes its own audit_log
+    entry, so we don't duplicate here.
+    """
+    try:
+        summary = await chartier_sync.sync_chartier_library(
+            actor_user_id=admin.id, db=db
+        )
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"ok": True, **summary}
 
 
 # ---------------------------------------------------------------------------

@@ -13,6 +13,8 @@
 
     :root {
       --bg: #fafaf8;
+      --panel: #ffffff;
+      --sidebar: #f3f1ec;
       --text: #1a1a1a;
       --accent: #8b1a1a;
       --accent-light: #a52020;
@@ -29,437 +31,1007 @@
       font-family: 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
+      overflow: hidden;
     }
 
-    /* ── Auth overlay ── */
-    #auth-overlay {
-      position: fixed; inset: 0;
-      background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100;
-    }
-    #auth-overlay.hidden { display: none; }
-
-    .auth-box {
-      width: 100%; max-width: 380px;
-      padding: 2.5rem 2rem;
-      text-align: center;
-    }
-    .auth-box h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 0.3rem;
-    }
-    .auth-box p {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 2rem;
-    }
-    .auth-box input[type="password"] {
-      width: 100%;
-      padding: 0.7rem 1rem;
-      font-size: 1rem;
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      margin-bottom: 0.8rem;
-      background: #fff;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .auth-box input[type="password"]:focus { border-color: var(--accent); }
-    .auth-box button {
-      width: 100%;
-      padding: 0.7rem;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .auth-box button:hover { background: var(--accent-light); }
-    #auth-error {
-      margin-top: 0.6rem;
-      font-size: 0.85rem;
-      color: var(--error);
-      min-height: 1.2em;
-    }
-
-    /* ── App shell ── */
-    #app {
-      display: flex; flex-direction: column;
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
       height: 100vh;
     }
-    #app.hidden { display: none; }
 
-    /* Header */
-    header {
-      background: var(--accent);
-      color: #fff;
-      padding: 0.9rem 1.2rem;
-      flex-shrink: 0;
-    }
-    header h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-    header p {
-      font-size: 0.78rem;
-      opacity: 0.8;
-      margin-top: 0.1rem;
-    }
-
-    /* Chat thread */
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.2rem 1rem;
+    /* ───── Sidebar ───── */
+    .sidebar {
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 0.8rem;
+      min-height: 0;
+    }
+
+    .sidebar-header {
+      padding: 1.25rem 1rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.75rem;
+    }
+
+    .new-chat-btn {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .new-chat-btn:hover { background: var(--accent-light); }
+    .new-chat-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0.5rem 1rem;
+    }
+
+    .chat-item {
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 2px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #333;
+    }
+    .chat-item:hover { background: rgba(0,0,0,0.04); }
+    .chat-item.active { background: #e6e1d7; color: #000; font-weight: 500; }
+    .chat-item .chat-title-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chat-item.untitled .chat-title-text { color: var(--muted); font-style: italic; }
+    .chat-item .chat-menu-btn {
+      flex-shrink: 0;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted);
+      font-size: 1.1rem; line-height: 1;
+      padding: 0 0.25rem;
+      border-radius: 4px;
+      display: none;
+    }
+    .chat-item:hover .chat-menu-btn,
+    .chat-item.active .chat-menu-btn { display: inline-block; }
+    .chat-item .chat-menu-btn:hover { background: rgba(0,0,0,0.08); color: #000; }
+
+    .chat-list-empty {
+      padding: 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .sidebar-footer .user-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #333;
+    }
+    .sidebar-footer a,
+    .sidebar-footer button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+      padding: 0 0.25rem;
+    }
+    .sidebar-footer a:hover,
+    .sidebar-footer button:hover { text-decoration: underline; }
+
+    /* ───── Main panel ───── */
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--bg);
+    }
+
+    .main-header {
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .main-header h2 {
+      flex: 1;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .main-header h2.untitled { color: var(--muted); font-style: italic; font-weight: 400; }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem 1.5rem;
+    }
+    .messages-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
 
     .message {
-      max-width: 82%;
-      padding: 0.75rem 1rem;
+      padding: 0.9rem 1.1rem;
       border-radius: 10px;
       line-height: 1.55;
-      font-size: 0.93rem;
+      font-size: 0.95rem;
     }
     .message.user {
-      align-self: flex-end;
       background: var(--user-bg);
-      border-bottom-right-radius: 3px;
+      align-self: flex-end;
+      max-width: 80%;
+      white-space: pre-wrap;
     }
     .message.assistant {
-      align-self: flex-start;
       background: var(--assistant-bg);
       border: 1px solid var(--border);
-      border-bottom-left-radius: 3px;
+      align-self: stretch;
     }
-    .message.error {
-      align-self: flex-start;
-      background: #fff5f5;
-      border: 1px solid #f5c6cb;
-      color: var(--error);
-    }
-
-    /* Markdown inside assistant messages */
-    .message.assistant h1, .message.assistant h2, .message.assistant h3 {
-      font-family: 'Cormorant Garamond', serif;
-      margin: 0.8rem 0 0.3rem;
-    }
-    .message.assistant h1 { font-size: 1.3rem; }
-    .message.assistant h2 { font-size: 1.15rem; }
-    .message.assistant h3 { font-size: 1.05rem; }
-    .message.assistant p { margin-bottom: 0.5rem; }
+    .message.assistant p { margin: 0 0 0.6rem; }
     .message.assistant p:last-child { margin-bottom: 0; }
-    .message.assistant ul, .message.assistant ol {
-      padding-left: 1.3rem;
-      margin-bottom: 0.5rem;
-    }
+    .message.assistant ul, .message.assistant ol { margin: 0 0 0.6rem 1.25rem; }
     .message.assistant li { margin-bottom: 0.2rem; }
-    .message.assistant strong { font-weight: 600; }
-    .message.assistant em { font-style: italic; }
+    .message.assistant h1,
+    .message.assistant h2,
+    .message.assistant h3 {
+      font-family: 'Cormorant Garamond', serif;
+      margin: 0.4rem 0;
+    }
     .message.assistant code {
-      background: #f0ede8;
-      padding: 0.1em 0.3em;
+      background: #f3f1ec;
+      padding: 0.1rem 0.3rem;
       border-radius: 3px;
       font-size: 0.88em;
     }
-    .message.assistant blockquote {
-      border-left: 3px solid var(--accent);
-      padding-left: 0.8rem;
+    .message.assistant pre {
+      background: #f3f1ec;
+      padding: 0.8rem;
+      border-radius: 6px;
+      overflow-x: auto;
       margin: 0.4rem 0;
+    }
+    .message.assistant blockquote {
+      border-left: 3px solid var(--border);
+      padding-left: 0.75rem;
       color: #555;
-      font-style: italic;
+      margin: 0.5rem 0;
     }
 
-    /* Typing indicator */
-    .typing {
+    .thinking {
       align-self: flex-start;
-      background: var(--assistant-bg);
-      border: 1px solid var(--border);
-      border-bottom-left-radius: 3px;
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      display: flex; gap: 5px; align-items: center;
-    }
-    .typing span {
-      width: 7px; height: 7px;
-      background: var(--muted);
-      border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
-    .typing span:nth-child(2) { animation-delay: 0.2s; }
-    .typing span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-6px); }
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.9rem;
+      padding: 0.4rem 0;
     }
 
-    /* Input bar */
-    #input-bar {
-      flex-shrink: 0;
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.8rem 1rem;
+    .composer {
+      padding: 1rem 1.5rem 1.25rem;
       border-top: 1px solid var(--border);
-      background: var(--bg);
+      background: var(--panel);
     }
-    #question {
+    .composer-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-end;
+    }
+    .composer textarea {
       flex: 1;
-      padding: 0.6rem 0.9rem;
+      min-height: 44px;
+      max-height: 200px;
+      padding: 0.7rem 0.9rem;
+      font: inherit;
       font-size: 0.95rem;
-      font-family: 'Inter', sans-serif;
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      resize: none;
+      background: #fff;
+    }
+    .composer textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .composer button {
+      padding: 0.7rem 1.25rem;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .composer button:hover:not(:disabled) { background: var(--accent-light); }
+    .composer button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .error-banner {
+      background: #fbecec;
+      border: 1px solid #e9c7c7;
+      color: #7a2020;
+      padding: 0.6rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin: 0 auto 0.75rem;
+      max-width: 780px;
+    }
+
+    /* ───── Menu popup ───── */
+    .menu-popup {
+      position: fixed;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 0.25rem 0;
+      z-index: 50;
+      min-width: 140px;
+    }
+    .menu-popup button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 0.5rem 0.9rem;
+      font: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: #333;
+    }
+    .menu-popup button:hover { background: #f5f3ee; }
+    .menu-popup button.danger { color: var(--error); }
+
+    /* ───── Save-pairing button + modal ───── */
+    .save-pairing-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -0.3rem;
+    }
+    .save-pairing-btn {
+      font: inherit;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.75rem;
+      border: 1px solid var(--input-border);
+      background: #fff;
+      color: #444;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+    .save-pairing-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .save-pairing-btn.saved {
+      background: #4a7a4a;
+      border-color: #4a7a4a;
+      color: #fff;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .modal-backdrop.visible { display: flex; }
+    .modal {
+      background: var(--panel);
+      border-radius: 10px;
+      width: min(560px, 92vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.4rem 1.5rem 1.25rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .modal .field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.85rem; }
+    .modal .field label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .modal .field input, .modal .field textarea {
+      padding: 0.5rem 0.7rem;
+      font: inherit;
+      font-size: 0.9rem;
       border: 1px solid var(--input-border);
       border-radius: 6px;
-      resize: none;
-      outline: none;
-      line-height: 1.4;
-      max-height: 120px;
-      overflow-y: auto;
-      transition: border-color 0.15s;
+      background: #fff;
     }
-    #question:focus { border-color: var(--accent); }
-    #send-btn {
-      padding: 0.6rem 1.1rem;
-      background: var(--accent);
+    .modal .field textarea { resize: vertical; min-height: 3.5rem; }
+    .modal .field input:focus, .modal .field textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .modal .actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 0.6rem;
+    }
+    .modal button.primary {
+      padding: 0.55rem 1.1rem;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
       color: #fff;
-      border: none;
+      background: var(--accent);
+      border: 1px solid var(--accent);
       border-radius: 6px;
-      font-size: 0.95rem;
-      font-family: 'Inter', sans-serif;
       cursor: pointer;
-      align-self: flex-end;
-      transition: background 0.15s;
-      white-space: nowrap;
     }
-    #send-btn:hover { background: var(--accent-light); }
-    #send-btn:disabled { background: #bbb; cursor: default; }
-
-    @media (max-width: 480px) {
-      .message { max-width: 95%; }
-      header h1 { font-size: 1.3rem; }
+    .modal button.primary:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent-light); }
+    .modal button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .modal button.secondary {
+      padding: 0.55rem 1.1rem;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      background: #fff;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      cursor: pointer;
+      color: #444;
     }
+    .modal button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .modal .modal-error {
+      background: #fde8e8;
+      border: 1px solid #f3c3c3;
+      color: var(--error);
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: none;
+      margin-bottom: 0.75rem;
+    }
+    .modal .modal-error.visible { display: block; }
   </style>
 </head>
 <body>
+  <div class="app" id="app" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">Somm</div>
+        <button class="new-chat-btn" id="new-chat-btn">+ New chat</button>
+      </div>
+      <div class="chat-list" id="chat-list"></div>
+      <div class="sidebar-footer">
+        <span class="user-name" id="user-name"></span>
+        <a href="/library">Library</a>
+        <a href="/saved">Saved</a>
+        <a href="/preferences">Preferences</a>
+        <a href="/admin" id="admin-link" hidden>Admin</a>
+        <button id="logout-btn" title="Sign out">Sign out</button>
+      </div>
+    </aside>
 
-<!-- Auth overlay -->
-<div id="auth-overlay">
-  <div class="auth-box">
-    <h1>🍷 The Sommelier</h1>
-    <p>Molecular pairing by Chartier</p>
-    <input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" />
-    <button id="auth-btn">Enter</button>
-    <div id="auth-error"></div>
+    <main class="main">
+      <div class="main-header">
+        <h2 id="chat-title">Somm</h2>
+      </div>
+      <div class="messages" id="messages">
+        <div class="empty-state" id="empty-state">
+          Start a new chat or select one from the left.
+        </div>
+      </div>
+      <form class="composer" id="composer">
+        <div class="composer-inner">
+          <textarea
+            id="input"
+            placeholder="Ask about a pairing, a wine, a dish…"
+            rows="1"
+            disabled
+          ></textarea>
+          <button type="submit" id="send-btn" disabled>Send</button>
+        </div>
+      </form>
+    </main>
   </div>
-</div>
 
-<!-- App -->
-<div id="app" class="hidden">
-  <header>
-    <h1>🍷 The Sommelier</h1>
-    <p>Molecular pairing by Chartier</p>
-  </header>
-  <div id="chat"></div>
-  <div id="input-bar">
-    <textarea id="question" rows="1" placeholder="Ask about wine and food pairing…"></textarea>
-    <button id="send-btn">Ask</button>
+  <div class="modal-backdrop" id="save-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
+      <h3 id="save-modal-title">Save this pairing</h3>
+      <div class="modal-error" id="save-modal-error"></div>
+      <form id="save-form">
+        <div class="field">
+          <label for="sp-wine">Wine</label>
+          <input id="sp-wine" name="wine" type="text" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="sp-dish">Dish</label>
+          <input id="sp-dish" name="dish" type="text" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="sp-logic">Molecule logic</label>
+          <textarea id="sp-logic" name="molecule_logic"></textarea>
+        </div>
+        <div class="field">
+          <label for="sp-examples">Wine examples</label>
+          <textarea id="sp-examples" name="wine_examples"></textarea>
+        </div>
+        <div class="field">
+          <label for="sp-notes">My notes</label>
+          <textarea id="sp-notes" name="user_notes" placeholder="Optional — anything to remember about this pairing."></textarea>
+        </div>
+        <div class="actions">
+          <button type="button" class="secondary" id="sp-cancel">Cancel</button>
+          <button type="submit" class="primary" id="sp-submit">Save pairing</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<script>
-  // ── State ──
-  const SESSION_ID = crypto.randomUUID();
-  let password = sessionStorage.getItem('somm_password') || '';
-  let sending = false;
+  <script>
+    // ───── State ─────
+    let me = null;
+    let chats = [];                  // {id, title, archived_at, ...}
+    let activeChatId = null;
+    let activeMessages = [];         // local cache of the open chat's messages
+    let sending = false;
+    let openMenu = null;             // DOM node of the currently-open menu
 
-  // ── marked config ──
-  marked.setOptions({ breaks: true });
+    // ───── DOM refs ─────
+    const appEl = document.getElementById('app');
+    const chatListEl = document.getElementById('chat-list');
+    const chatTitleEl = document.getElementById('chat-title');
+    const messagesEl = document.getElementById('messages');
+    const emptyStateEl = document.getElementById('empty-state');
+    const composerEl = document.getElementById('composer');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send-btn');
+    const newChatBtn = document.getElementById('new-chat-btn');
+    const userNameEl = document.getElementById('user-name');
+    const adminLink = document.getElementById('admin-link');
+    const logoutBtn = document.getElementById('logout-btn');
 
-  // ── DOM refs ──
-  const authOverlay = document.getElementById('auth-overlay');
-  const authError   = document.getElementById('auth-error');
-  const passInput   = document.getElementById('password-input');
-  const authBtn     = document.getElementById('auth-btn');
-  const appEl       = document.getElementById('app');
-  const chatEl      = document.getElementById('chat');
-  const questionEl  = document.getElementById('question');
-  const sendBtn     = document.getElementById('send-btn');
-
-  // ── Auth ──
-  async function attemptAuth(pw) {
-    authError.textContent = '';
-    authBtn.disabled = true;
-    authBtn.textContent = 'Checking…';
-    try {
-      const res = await fetch('/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${pw}`,
-          'X-Session-ID': SESSION_ID,
-        },
-        body: JSON.stringify({ question: 'ping' }),
+    // ───── Helpers ─────
+    async function api(path, opts = {}) {
+      const r = await fetch(path, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        ...opts,
       });
-      if (res.status === 401) {
-        authError.textContent = 'Incorrect password';
-        passInput.value = '';
-        passInput.focus();
+      if (r.status === 401) {
+        location.href = '/login';
+        throw new Error('unauthorized');
+      }
+      if (!r.ok) {
+        let detail = 'Request failed';
+        try { detail = (await r.json()).detail || detail; } catch {}
+        throw new Error(detail);
+      }
+      if (r.status === 204) return null;
+      return r.json();
+    }
+
+    function escapeHtml(s) {
+      return (s || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
+
+    // ───── Render ─────
+    function renderChatList() {
+      chatListEl.innerHTML = '';
+      if (chats.length === 0) {
+        const e = document.createElement('div');
+        e.className = 'chat-list-empty';
+        e.textContent = 'No chats yet.';
+        chatListEl.appendChild(e);
+        return;
+      }
+      for (const c of chats) {
+        const item = document.createElement('div');
+        item.className = 'chat-item';
+        if (c.id === activeChatId) item.classList.add('active');
+        if (!c.title) item.classList.add('untitled');
+
+        const titleEl = document.createElement('span');
+        titleEl.className = 'chat-title-text';
+        titleEl.textContent = c.title || 'Untitled';
+        item.appendChild(titleEl);
+
+        const menuBtn = document.createElement('button');
+        menuBtn.className = 'chat-menu-btn';
+        menuBtn.type = 'button';
+        menuBtn.textContent = '⋯';
+        menuBtn.setAttribute('aria-label', 'Chat actions');
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openChatMenu(c, menuBtn);
+        });
+        item.appendChild(menuBtn);
+
+        item.addEventListener('click', () => selectChat(c.id));
+        chatListEl.appendChild(item);
+      }
+    }
+
+    function renderMessages() {
+      messagesEl.innerHTML = '';
+      if (activeChatId === null) {
+        const e = document.createElement('div');
+        e.className = 'empty-state';
+        e.textContent = 'Start a new chat or select one from the left.';
+        messagesEl.appendChild(e);
+        return;
+      }
+      const inner = document.createElement('div');
+      inner.className = 'messages-inner';
+
+      if (activeMessages.length === 0) {
+        const e = document.createElement('div');
+        e.className = 'empty-state';
+        e.textContent = 'Ask the first question.';
+        inner.appendChild(e);
+      }
+
+      for (const m of activeMessages) {
+        inner.appendChild(renderMessage(m));
+      }
+      messagesEl.appendChild(inner);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function renderMessage(m) {
+      const wrap = document.createDocumentFragment();
+      const el = document.createElement('div');
+      el.className = 'message ' + m.role;
+      if (m.role === 'assistant' && window.marked) {
+        el.innerHTML = marked.parse(m.content || '');
       } else {
-        // Success (any non-401 response means password was accepted)
-        sessionStorage.setItem('somm_password', pw);
-        password = pw;
-        showApp();
+        el.textContent = m.content || '';
       }
-    } catch {
-      authError.textContent = 'Connection error. Please try again.';
-    } finally {
-      authBtn.disabled = false;
-      authBtn.textContent = 'Enter';
+      wrap.appendChild(el);
+      if (m.role === 'assistant') {
+        const row = document.createElement('div');
+        row.className = 'save-pairing-row';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'save-pairing-btn';
+        btn.textContent = 'Save pairing';
+        btn.addEventListener('click', () => openSaveModal(m));
+        row.appendChild(btn);
+        wrap.appendChild(row);
+      }
+      return wrap;
     }
-  }
 
-  function showApp() {
-    authOverlay.classList.add('hidden');
-    appEl.classList.remove('hidden');
-    addAssistantMessage(
-      'Ask me anything about wine and food pairing. For the most accurate answer, tell me: the main ingredient, any herbs or sauce, and the cooking method — for example, *"lamb, rosemary and garlic, roasted"*.'
-    );
-    questionEl.focus();
-  }
-
-  authBtn.addEventListener('click', () => {
-    const pw = passInput.value.trim();
-    if (pw) attemptAuth(pw);
-  });
-  passInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); authBtn.click(); }
-  });
-
-  // ── Chat helpers ──
-  function scrollToBottom() {
-    chatEl.scrollTop = chatEl.scrollHeight;
-  }
-
-  function addUserMessage(text) {
-    const div = document.createElement('div');
-    div.className = 'message user';
-    div.textContent = text;
-    chatEl.appendChild(div);
-    scrollToBottom();
-  }
-
-  function addAssistantMessage(markdown) {
-    const div = document.createElement('div');
-    div.className = 'message assistant';
-    div.innerHTML = marked.parse(markdown);
-    chatEl.appendChild(div);
-    scrollToBottom();
-  }
-
-  function addErrorMessage(text) {
-    const div = document.createElement('div');
-    div.className = 'message error';
-    div.textContent = text;
-    chatEl.appendChild(div);
-    scrollToBottom();
-  }
-
-  function showTyping() {
-    const div = document.createElement('div');
-    div.className = 'typing';
-    div.id = 'typing-indicator';
-    div.innerHTML = '<span></span><span></span><span></span>';
-    chatEl.appendChild(div);
-    scrollToBottom();
-    return div;
-  }
-
-  function removeTyping() {
-    document.getElementById('typing-indicator')?.remove();
-  }
-
-  // ── Send ──
-  async function sendQuestion() {
-    if (sending) return;
-    const question = questionEl.value.trim();
-    if (!question) return;
-
-    sending = true;
-    sendBtn.disabled = true;
-    questionEl.value = '';
-    autoResize();
-
-    addUserMessage(question);
-    const typingEl = showTyping();
-
-    try {
-      const res = await fetch('/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${password}`,
-          'X-Session-ID': SESSION_ID,
-        },
-        body: JSON.stringify({ question }),
-      });
-
-      removeTyping();
-
-      if (res.status === 401) {
-        sessionStorage.removeItem('somm_password');
-        addErrorMessage('Session expired. Please refresh the page to log in again.');
-        return;
+    function renderHeader() {
+      const active = chats.find(c => c.id === activeChatId);
+      if (active) {
+        chatTitleEl.textContent = active.title || 'Untitled chat';
+        chatTitleEl.classList.toggle('untitled', !active.title);
+      } else {
+        chatTitleEl.textContent = 'Somm';
+        chatTitleEl.classList.remove('untitled');
       }
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        addErrorMessage(data.detail || 'An error occurred. Please try again.');
-        return;
-      }
-
-      const data = await res.json();
-      addAssistantMessage(data.answer);
-    } catch {
-      removeTyping();
-      addErrorMessage('Connection error. Please check your network and try again.');
-    } finally {
-      sending = false;
-      sendBtn.disabled = false;
-      questionEl.focus();
     }
-  }
 
-  sendBtn.addEventListener('click', sendQuestion);
+    function updateComposerState() {
+      const ready = activeChatId !== null && !sending;
+      inputEl.disabled = !ready;
+      sendBtn.disabled = !ready || inputEl.value.trim() === '';
+    }
 
-  questionEl.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // ───── Actions ─────
+    async function loadMe() {
+      me = await api('/api/me');
+      userNameEl.textContent = me.display_name || me.email;
+      if (me.role === 'admin') adminLink.hidden = false;
+    }
+
+    async function loadChats() {
+      const data = await api('/api/chats');
+      chats = data.chats || [];
+      renderChatList();
+    }
+
+    async function selectChat(chatId) {
+      if (sending) return;
+      activeChatId = chatId;
+      activeMessages = [];
+      renderChatList();
+      renderHeader();
+      updateComposerState();
+      messagesEl.innerHTML = '<div class="empty-state">Loading…</div>';
+      try {
+        const data = await api('/api/chats/' + encodeURIComponent(chatId));
+        activeMessages = data.messages || [];
+        renderMessages();
+        inputEl.focus();
+      } catch (err) {
+        showError('Could not load that chat: ' + err.message);
+      }
+    }
+
+    async function createChat() {
+      newChatBtn.disabled = true;
+      try {
+        const c = await api('/api/chats', {
+          method: 'POST',
+          body: JSON.stringify({}),
+        });
+        chats.unshift(c);
+        renderChatList();
+        await selectChat(c.id);
+      } catch (err) {
+        showError('Could not create chat: ' + err.message);
+      } finally {
+        newChatBtn.disabled = false;
+      }
+    }
+
+    async function sendMessage(text) {
+      if (!activeChatId || sending) return;
+      sending = true;
+      updateComposerState();
+
+      // Optimistic user turn so the UI reflects the send immediately.
+      const tempUser = {
+        id: 'tmp-' + Date.now(),
+        role: 'user',
+        content: text,
+      };
+      activeMessages.push(tempUser);
+      renderMessages();
+
+      // "Thinking" indicator.
+      const thinking = document.createElement('div');
+      thinking.className = 'thinking';
+      thinking.textContent = 'Sommelier is thinking…';
+      const inner = messagesEl.querySelector('.messages-inner');
+      if (inner) {
+        inner.appendChild(thinking);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      try {
+        const data = await api('/api/chats/' + encodeURIComponent(activeChatId) + '/messages', {
+          method: 'POST',
+          body: JSON.stringify({ content: text }),
+        });
+        // Replace the optimistic user turn with the persisted row, then
+        // append the assistant reply.
+        const idx = activeMessages.findIndex(m => m.id === tempUser.id);
+        if (idx >= 0) activeMessages[idx] = data.user_message;
+        activeMessages.push(data.assistant_message);
+        renderMessages();
+        // Refresh chat list so auto-generated titles show up.
+        loadChats().catch(() => {});
+      } catch (err) {
+        // Roll back optimistic turn on failure.
+        activeMessages = activeMessages.filter(m => m.id !== tempUser.id);
+        renderMessages();
+        showError(err.message || 'Send failed');
+      } finally {
+        sending = false;
+        updateComposerState();
+        inputEl.focus();
+      }
+    }
+
+    async function renameChat(chat) {
+      const next = prompt('Rename chat:', chat.title || '');
+      if (next == null) return;
+      const title = next.trim();
+      if (!title) return;
+      try {
+        const updated = await api('/api/chats/' + encodeURIComponent(chat.id), {
+          method: 'PATCH',
+          body: JSON.stringify({ title }),
+        });
+        const idx = chats.findIndex(c => c.id === chat.id);
+        if (idx >= 0) chats[idx] = updated;
+        renderChatList();
+        if (activeChatId === chat.id) renderHeader();
+      } catch (err) {
+        showError('Rename failed: ' + err.message);
+      }
+    }
+
+    async function archiveChat(chat) {
+      if (!confirm('Archive "' + (chat.title || 'this chat') + '"? It will no longer appear in your list.')) return;
+      try {
+        await api('/api/chats/' + encodeURIComponent(chat.id), { method: 'DELETE' });
+        chats = chats.filter(c => c.id !== chat.id);
+        if (activeChatId === chat.id) {
+          activeChatId = null;
+          activeMessages = [];
+          renderHeader();
+          renderMessages();
+          updateComposerState();
+        }
+        renderChatList();
+      } catch (err) {
+        showError('Archive failed: ' + err.message);
+      }
+    }
+
+    async function doLogout() {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch {}
+      location.href = '/login';
+    }
+
+    // ───── Menu ─────
+    function closeMenu() {
+      if (openMenu) {
+        openMenu.remove();
+        openMenu = null;
+      }
+    }
+
+    function openChatMenu(chat, anchor) {
+      closeMenu();
+      const rect = anchor.getBoundingClientRect();
+      const menu = document.createElement('div');
+      menu.className = 'menu-popup';
+      menu.style.top = (rect.bottom + 4) + 'px';
+      menu.style.left = (rect.right - 140) + 'px';
+
+      const rn = document.createElement('button');
+      rn.textContent = 'Rename';
+      rn.addEventListener('click', () => { closeMenu(); renameChat(chat); });
+
+      const ar = document.createElement('button');
+      ar.textContent = 'Archive';
+      ar.className = 'danger';
+      ar.addEventListener('click', () => { closeMenu(); archiveChat(chat); });
+
+      menu.appendChild(rn);
+      menu.appendChild(ar);
+      document.body.appendChild(menu);
+      openMenu = menu;
+    }
+
+    document.addEventListener('click', (e) => {
+      if (openMenu && !openMenu.contains(e.target)) closeMenu();
+    });
+
+    // ───── Errors ─────
+    function showError(text) {
+      const existing = document.querySelector('.error-banner');
+      if (existing) existing.remove();
+      const bar = document.createElement('div');
+      bar.className = 'error-banner';
+      bar.textContent = text;
+      const inner = messagesEl.querySelector('.messages-inner');
+      if (inner) {
+        messagesEl.insertBefore(bar, inner);
+      } else {
+        messagesEl.prepend(bar);
+      }
+      setTimeout(() => bar.remove(), 5000);
+    }
+
+    // ───── Wiring ─────
+    newChatBtn.addEventListener('click', createChat);
+    logoutBtn.addEventListener('click', doLogout);
+
+    composerEl.addEventListener('submit', (e) => {
       e.preventDefault();
-      sendQuestion();
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = '';
+      autoResize();
+      sendMessage(text);
+    });
+
+    function autoResize() {
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + 'px';
     }
-  });
 
-  // Auto-resize textarea
-  function autoResize() {
-    questionEl.style.height = 'auto';
-    questionEl.style.height = Math.min(questionEl.scrollHeight, 120) + 'px';
-  }
-  questionEl.addEventListener('input', autoResize);
+    inputEl.addEventListener('input', () => {
+      autoResize();
+      updateComposerState();
+    });
 
-  // ── Init ──
-  if (password) {
-    showApp();
-  } else {
-    passInput.focus();
-  }
-</script>
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        composerEl.requestSubmit();
+      }
+    });
+
+    // ───── Save pairing modal ─────
+    const saveModal = document.getElementById('save-modal');
+    const saveForm = document.getElementById('save-form');
+    const saveError = document.getElementById('save-modal-error');
+    const spWine = document.getElementById('sp-wine');
+    const spDish = document.getElementById('sp-dish');
+    const spLogic = document.getElementById('sp-logic');
+    const spExamples = document.getElementById('sp-examples');
+    const spNotes = document.getElementById('sp-notes');
+    const spSubmit = document.getElementById('sp-submit');
+    const spCancel = document.getElementById('sp-cancel');
+
+    let savingForMessage = null;  // {id, content} — the assistant turn being saved
+    let savingTriggerBtn = null;  // the button that opened the modal
+
+    // Best-effort extraction of a wine/dish hint from a markdown answer. The
+    // answer format is free-form, so this looks for the first **bolded**
+    // phrase or the first-line title and populates wine. Users always get
+    // to edit before save, so a rough guess is enough.
+    function guessWineAndDish(md) {
+      const text = (md || '').trim();
+      let wine = '';
+      let dish = '';
+      const bolds = [...text.matchAll(/\*\*(.+?)\*\*/g)].map(m => m[1].trim()).filter(Boolean);
+      if (bolds.length > 0) wine = bolds[0];
+      if (bolds.length > 1) dish = bolds[1];
+      if (!wine) {
+        const firstLine = text.split('\n', 1)[0].replace(/^#+\s*/, '').trim();
+        if (firstLine && firstLine.length <= 120) wine = firstLine;
+      }
+      return { wine, dish };
+    }
+
+    function openSaveModal(assistantMsg) {
+      savingForMessage = assistantMsg;
+      savingTriggerBtn = document.activeElement instanceof HTMLButtonElement
+        ? document.activeElement
+        : null;
+      saveError.className = 'modal-error';
+      saveError.textContent = '';
+
+      const guess = guessWineAndDish(assistantMsg.content || '');
+      spWine.value = guess.wine || '';
+      spDish.value = guess.dish || '';
+      spLogic.value = '';
+      spExamples.value = '';
+      spNotes.value = '';
+
+      saveModal.classList.add('visible');
+      setTimeout(() => spWine.focus(), 50);
+    }
+
+    function closeSaveModal() {
+      saveModal.classList.remove('visible');
+      savingForMessage = null;
+      savingTriggerBtn = null;
+      spSubmit.disabled = false;
+      spSubmit.textContent = 'Save pairing';
+    }
+
+    spCancel.addEventListener('click', closeSaveModal);
+    saveModal.addEventListener('click', (e) => {
+      if (e.target === saveModal) closeSaveModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && saveModal.classList.contains('visible')) closeSaveModal();
+    });
+
+    saveForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!savingForMessage) return;
+
+      const wine = spWine.value.trim();
+      const dish = spDish.value.trim();
+      if (!wine && !dish) {
+        saveError.textContent = 'At least one of wine or dish is required.';
+        saveError.className = 'modal-error visible';
+        return;
+      }
+
+      spSubmit.disabled = true;
+      spSubmit.textContent = 'Saving…';
+      try {
+        await api('/api/saved', {
+          method: 'POST',
+          body: JSON.stringify({
+            source: 'chat',
+            source_ref: savingForMessage.id || null,
+            wine: wine || null,
+            dish: dish || null,
+            molecule_logic: spLogic.value.trim() || null,
+            wine_examples: spExamples.value.trim() || null,
+            user_notes: spNotes.value.trim() || null,
+          }),
+        });
+        if (savingTriggerBtn) {
+          savingTriggerBtn.classList.add('saved');
+          savingTriggerBtn.textContent = 'Saved ✓';
+          setTimeout(() => {
+            if (savingTriggerBtn) {
+              savingTriggerBtn.classList.remove('saved');
+              savingTriggerBtn.textContent = 'Save pairing';
+            }
+          }, 1800);
+        }
+        closeSaveModal();
+      } catch (err) {
+        saveError.textContent = err.message || 'Save failed';
+        saveError.className = 'modal-error visible';
+        spSubmit.disabled = false;
+        spSubmit.textContent = 'Save pairing';
+      }
+    });
+
+    // ───── Init ─────
+    (async () => {
+      try {
+        await loadMe();
+        await loadChats();
+        appEl.hidden = false;
+        if (chats.length > 0) {
+          await selectChat(chats[0].id);
+        } else {
+          renderHeader();
+          updateComposerState();
+        }
+      } catch (err) {
+        if (err.message !== 'unauthorized') {
+          document.body.innerHTML = '<div style="padding:2rem;text-align:center;">Failed to load. Try refreshing.</div>';
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

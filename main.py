@@ -1,29 +1,28 @@
-import asyncio
 import base64
 import os
 import re
 import sys
-import uuid
-from collections import defaultdict
 from pathlib import Path
 
 import anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 
-# Load .env from the same directory as this file, overriding any existing env vars
+# Load .env from the same directory as this file.
+# override=False: real environment variables (Render, systemd, or the
+# prod-dryrun script) always win; .env only fills in the gaps. This is
+# the standard 12-factor pattern and prevents a stale local .env from
+# clobbering prod-shaped config during dry-runs.
 _env_path = Path(__file__).parent / ".env"
-load_dotenv(dotenv_path=_env_path, override=True)
+load_dotenv(dotenv_path=_env_path, override=False)
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
 SOMM_DATA_PATH = os.environ.get("SOMM_DATA_PATH", "../Wine Pairings/somm")
 
 TABLE_FILES = [
@@ -92,7 +91,6 @@ SCREENSHOT_ROUTING = {
 }
 
 MAX_SCREENSHOTS = 6
-MAX_HISTORY_MESSAGES = 12
 
 # ---------------------------------------------------------------------------
 # Startup: validate and assemble system prompt
@@ -195,19 +193,10 @@ def _get_relevant_screenshots(question: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Conversation history
+# Anthropic client (shared across routers)
 # ---------------------------------------------------------------------------
 
-# { session_id: [ {"role": "user"|"assistant", "content": ...}, ... ] }
-session_history: dict[str, list] = defaultdict(list)
-
-
-def _add_to_history(session_id: str, role: str, content):
-    history = session_history[session_id]
-    history.append({"role": role, "content": content})
-    # Drop oldest pairs when over limit (keep last MAX_HISTORY_MESSAGES)
-    while len(history) > MAX_HISTORY_MESSAGES:
-        history.pop(0)
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
 # ---------------------------------------------------------------------------
@@ -217,25 +206,38 @@ def _add_to_history(session_id: str, role: str, content):
 app = FastAPI(title="The Sommelier")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Phase 0: wire magic-link auth routes. The old APP_PASSWORD-bearer flow on
-# /ask is kept in parallel during the v1 → v2 transition (§11 step 2).
+# Auth + admin + chats + preferences + chartier + saved routers. Phase 2
+# retired the v1 APP_PASSWORD /ask endpoint; Phase 3 adds preferences
+# injection (§7); Phase 4 adds the Chartier library and saved pairings
+# (§8, §9).
 import admin  # noqa: E402
 import auth  # noqa: E402
 import bootstrap  # noqa: E402
+import chartier  # noqa: E402
+import chartier_sync  # noqa: E402
+import chats  # noqa: E402
+import observability  # noqa: E402
+import preferences  # noqa: E402
+import saved  # noqa: E402
 
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(chats.router)
+app.include_router(preferences.router)
+app.include_router(chartier.router)
+app.include_router(saved.router)
+
+# Phase 5 (§12, §13.3): access log, /healthz, 5xx→admin-email handler,
+# and the rate-limiter singleton consumed by auth.request_magic_link.
+# install() must run AFTER routers are mounted so the middleware wraps
+# every route including those registered below.
+observability.install(app)
 
 
 @app.on_event("startup")
 async def _on_startup() -> None:
     await bootstrap.seed_admin_if_needed()
-
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-
-
-class AskRequest(BaseModel):
-    question: str
+    await chartier_sync.sync_on_startup()
 
 
 @app.get("/")
@@ -256,77 +258,28 @@ async def admin_page():
     return FileResponse("static/admin.html")
 
 
+@app.get("/preferences")
+async def preferences_page():
+    return FileResponse("static/preferences.html")
+
+
+@app.get("/library")
+async def library_page():
+    return FileResponse("static/library.html")
+
+
+@app.get("/saved")
+async def saved_page():
+    return FileResponse("static/saved.html")
+
+
+@app.get("/saved/new")
+async def saved_new_page():
+    return FileResponse("static/saved_new.html")
+
+
 @app.get("/health")
 async def health():
+    # Kept as a stable, cheap liveness probe for Render's default health
+    # check path. The richer /healthz snapshot lives in observability.py.
     return {"status": "ok"}
-
-
-@app.post("/ask")
-async def ask(
-    body: AskRequest,
-    authorization: str = Header(default=""),
-    x_session_id: str = Header(default=""),
-):
-    # Auth
-    expected = f"Bearer {APP_PASSWORD}"
-    if not APP_PASSWORD or authorization != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    question = body.question.strip()
-    if not question:
-        raise HTTPException(status_code=400, detail="Question is required")
-
-    session_id = x_session_id or str(uuid.uuid4())
-
-    # Build user message content (text + relevant screenshots)
-    screenshots = _get_relevant_screenshots(question)
-    if screenshots:
-        print(f"[somm] Attaching {len(screenshots)} screenshot(s) for session {session_id[:8]}")
-
-    user_content: list = []
-    for img in screenshots:
-        user_content.append(img)
-    user_content.append({"type": "text", "text": question})
-
-    # Add to history
-    _add_to_history(session_id, "user", user_content)
-
-    # Build messages list from history
-    messages = list(session_history[session_id])
-
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=2048,
-                temperature=0,
-                system=SYSTEM_PROMPT,
-                messages=messages,
-            )
-            answer = response.content[0].text
-            break
-        except anthropic.RateLimitError as e:
-            if attempt < max_retries - 1:
-                wait = (attempt + 1) * 65
-                print(f"[somm] Rate limited, retrying in {wait}s (attempt {attempt + 1}/{max_retries})")
-                await asyncio.sleep(wait)
-            else:
-                print(f"[somm] Rate limit exceeded after {max_retries} retries: {e}", file=sys.stderr)
-                session_history[session_id].pop()
-                raise HTTPException(
-                    status_code=503,
-                    detail="The sommelier is busy right now. Please wait a minute and try again.",
-                )
-        except Exception as e:
-            print(f"[somm] Anthropic API error: {e}", file=sys.stderr)
-            session_history[session_id].pop()
-            raise HTTPException(
-                status_code=500,
-                detail="The sommelier is unavailable right now. Please try again.",
-            )
-
-    # Store assistant reply as plain text in history
-    _add_to_history(session_id, "assistant", answer)
-
-    return {"answer": answer}

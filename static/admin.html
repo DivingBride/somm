@@ -269,6 +269,12 @@
     </header>
 
     <div id="app" hidden>
+      <!-- System status (Phase 5 /healthz snapshot) -->
+      <section id="status-section">
+        <h2>System status <button class="secondary" id="status-refresh" style="float:right;font-size:0.8rem;padding:0.25rem 0.6rem;">Refresh</button></h2>
+        <div id="status-panel" class="loading">Checking…</div>
+      </section>
+
       <!-- Users -->
       <section id="users-section">
         <h2>Users</h2>
@@ -679,6 +685,60 @@
       setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
     });
 
+    // ---------- system status (Phase 5 /healthz) ----------
+    function escapeHtml(s) {
+      return (s == null ? '' : String(s))
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
+
+    const STATUS_LABELS = {
+      ok: ['OK', '#2a7a2a'],
+      degraded: ['Degraded', '#b57300'],
+      fail: ['Failing', '#b00020'],
+      missing: ['Missing', '#b57300'],
+      disabled: ['Disabled', '#777'],
+      unconfigured: ['Unconfigured', '#b57300'],
+    };
+
+    async function renderStatus() {
+      const panel = document.getElementById('status-panel');
+      panel.className = 'loading';
+      panel.textContent = 'Checking…';
+      try {
+        // /healthz returns 200 for ok/degraded and 503 for fail; fetch and
+        // parse the JSON in either case (we don't gate on response.ok).
+        const r = await fetch('/healthz', { credentials: 'same-origin' });
+        const snap = await r.json();
+        const overall = STATUS_LABELS[snap.status] || ['Unknown', '#777'];
+        const rows = Object.entries(snap.checks || {}).map(([name, c]) => {
+          const lbl = STATUS_LABELS[c.status] || [c.status, '#777'];
+          const detail = c.detail ? ` — ${escapeHtml(c.detail)}` : '';
+          return `
+            <tr>
+              <td style="padding:0.3rem 0.6rem 0.3rem 0;font-family:monospace;">${escapeHtml(name)}</td>
+              <td style="padding:0.3rem 0.6rem;color:${lbl[1]};font-weight:500;">${escapeHtml(lbl[0])}</td>
+              <td style="padding:0.3rem 0;color:#555;font-size:0.88rem;">${detail}</td>
+            </tr>`;
+        }).join('');
+        panel.className = '';
+        panel.innerHTML = `
+          <div style="margin-bottom:0.6rem;">
+            Overall:
+            <strong style="color:${overall[1]};">${escapeHtml(overall[0])}</strong>
+            <span class="subtle" style="margin-left:0.75rem;font-size:0.85rem;">checked ${escapeHtml(snap.timestamp || '')}</span>
+          </div>
+          <table style="border-collapse:collapse;">${rows}</table>
+        `;
+      } catch (err) {
+        panel.className = 'message error';
+        panel.textContent = 'Could not fetch /healthz: ' + (err?.message || err);
+      }
+    }
+
+    document.getElementById('status-refresh').addEventListener('click', renderStatus);
+
     // ---------- logout ----------
     document.getElementById('logout-link').addEventListener('click', async (e) => {
       e.preventDefault();
@@ -692,7 +752,7 @@
       if (!ok) return;
       // Users needs to finish before audit so userById is populated for rendering actor emails.
       await renderUsers();
-      await Promise.all([renderInvites(), renderAudit(true)]);
+      await Promise.all([renderInvites(), renderAudit(true), renderStatus()]);
     })();
   </script>
 </body>

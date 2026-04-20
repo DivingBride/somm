@@ -327,8 +327,25 @@ async def request_magic_link(
     """
     Always 200 with a generic message (§5 — no account enumeration).
     If the email matches an active user, a magic link is sent.
+
+    Phase 5 hardening (§13.3): per-email sliding-window rate limit of
+    3 requests / 5 minutes. When exceeded we return 429 with Retry-After
+    — deliberately distinct from the generic 200 because rate-limit
+    signals don't enable enumeration (they trigger identically for
+    unknown emails, which also hit the limiter).
     """
     email = body.email.lower().strip()
+
+    from observability import magic_link_rate_limiter
+
+    allowed, retry_after = magic_link_rate_limiter.check(email)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many sign-in link requests. Try again shortly.",
+            headers={"Retry-After": str(int(retry_after) + 1)},
+        )
+
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 

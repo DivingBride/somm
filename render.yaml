@@ -1,13 +1,68 @@
+# Render Blueprint — Somm v2.0
+#
+# This file is read by Render when you connect the repo via
+# "New > Blueprint". Everything it can't configure automatically
+# (secrets, custom domain) is flagged in DEPLOY.md.
+#
+# Architecture notes:
+#   - Single web service, single worker. SQLite is single-writer, so
+#     running >1 worker would cause "database is locked" at concurrent-
+#     user boundaries. 10-20 users fit fine in one worker.
+#   - Persistent disk at /var/data holds the SQLite DB. Render snapshots
+#     this disk automatically — that's our backup (spec §13 decision 2).
+#   - `alembic upgrade head` runs before uvicorn binds the port, so a
+#     deploy that can't migrate aborts before swapping traffic.
+
 services:
   - type: web
     name: somm
     runtime: python
+    plan: starter           # $7/mo — required for persistent disks
+    region: oregon          # change to frankfurt / singapore if closer to users
+    branch: main
+
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    startCommand: |
+      alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+
+    healthCheckPath: /health
+
+    disk:
+      name: somm-data
+      mountPath: /var/data
+      sizeGB: 1
+
     envVars:
+      # --- Required secrets (set in Render dashboard, NOT in this file) ---
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: APP_PASSWORD
+      - key: SESSION_SECRET
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+
+      # --- Required, safe to commit ---
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:////var/data/somm.db
+      - key: APP_URL
+        value: https://somm.onrender.com
+      - key: COOKIE_SECURE
+        value: "true"
       - key: SOMM_DATA_PATH
         value: ./somm_data
+      - key: CHARTIER_XLSX_PATH
+        value: ./somm_data/Chartier_Wine_Food_Pairings.xlsx
+      - key: FROM_EMAIL
+        value: Somm <onboarding@resend.dev>
+
+      # --- Optional (recommended) ---
+      - key: ADMIN_DISPLAY_NAME
+        sync: false
+      - key: ADMIN_ALERT_EMAILS
+        sync: false
+
+      - key: PYTHON_VERSION
+        value: 3.11.9

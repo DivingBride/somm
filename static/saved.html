@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saved pairings · Somm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --panel: #ffffff;
+      --text: #1a1a1a;
+      --accent: #8b1a1a;
+      --accent-light: #a52020;
+      --border: #ddd;
+      --input-border: #ccc;
+      --muted: #888;
+      --error: #c0392b;
+      --tag-bg: #f3f1ec;
+      --tag-border: #d7cfbc;
+      --tried: #4a7a4a;
+    }
+
+    html, body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+    }
+
+    .page-header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      flex: 1;
+    }
+    .page-header a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .page-header a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1100px;
+      margin: 1.5rem auto 3rem;
+      padding: 0 1.5rem;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .toolbar .counter {
+      font-size: 0.88rem;
+      color: var(--muted);
+      flex: 1;
+    }
+    .toolbar a.btn {
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+    .toolbar a.btn:hover { background: var(--accent-light); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.15rem 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .source-badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      color: #6a5a2a;
+      border-radius: 12px;
+      align-self: flex-start;
+    }
+    .source-badge.chat { background: #ecf0f8; border-color: #c6d2e8; color: #3a4a6a; }
+    .source-badge.custom { background: #f1ecf5; border-color: #d4c3e0; color: #5a3a70; }
+
+    .card-wine {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+    .card-dish {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #222;
+    }
+    .card-logic {
+      font-size: 0.88rem;
+      color: #333;
+      line-height: 1.5;
+    }
+    .card-examples {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .notes-area {
+      border-top: 1px dashed var(--border);
+      padding-top: 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .notes-area label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .notes-area textarea {
+      width: 100%;
+      min-height: 3rem;
+      padding: 0.5rem 0.6rem;
+      font: inherit;
+      font-size: 0.85rem;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      background: #fff;
+      resize: vertical;
+    }
+    .notes-area textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+
+    .card-footer {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding-top: 0.35rem;
+    }
+    .tried-pill {
+      font-size: 0.78rem;
+      padding: 0.3rem 0.65rem;
+      border: 1px solid var(--input-border);
+      border-radius: 14px;
+      background: #fff;
+      color: #444;
+      cursor: pointer;
+    }
+    .tried-pill.on {
+      background: var(--tried);
+      border-color: var(--tried);
+      color: #fff;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.35rem;
+    }
+    button.link-btn {
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--input-border);
+      background: #fff;
+      color: #333;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.link-btn:hover { border-color: var(--accent); color: var(--accent); }
+    button.link-btn.danger:hover { border-color: var(--error); color: var(--error); }
+    button.link-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      padding: 3rem 0;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+    }
+    .empty a { color: var(--accent); }
+
+    .flash {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2a5a2a;
+      color: #fff;
+      padding: 0.7rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 100;
+    }
+    .flash.visible { opacity: 1; }
+    .flash.error { background: var(--error); }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <h1>My saved pairings</h1>
+    <a href="/library">Chartier library</a>
+    <a href="/">&larr; Back to chat</a>
+  </header>
+
+  <div class="container">
+    <div class="toolbar">
+      <div class="counter" id="counter"></div>
+      <a href="/saved/new" class="btn">+ New pairing</a>
+    </div>
+
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <div class="flash" id="flash"></div>
+
+  <script>
+    const cardsEl = document.getElementById('cards');
+    const counterEl = document.getElementById('counter');
+    const flashEl = document.getElementById('flash');
+
+    async function api(path, opts = {}) {
+      const r = await fetch(path, {
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        ...opts,
+      });
+      if (r.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+      if (!r.ok) {
+        let detail = 'Request failed';
+        try { detail = (await r.json()).detail || detail; } catch {}
+        throw new Error(detail);
+      }
+      if (r.status === 204) return null;
+      return r.json();
+    }
+
+    function flash(text, kind = 'ok') {
+      flashEl.textContent = text;
+      flashEl.className = 'flash visible' + (kind === 'error' ? ' error' : '');
+      setTimeout(() => { flashEl.className = 'flash'; }, 1800);
+    }
+
+    function escapeHtml(s) {
+      return (s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    }
+
+    function sourceLabel(src) {
+      if (src === 'chartier') return 'Chartier';
+      if (src === 'chat') return 'Chat';
+      if (src === 'custom') return 'Custom';
+      return src;
+    }
+
+    function renderCards(items) {
+      counterEl.textContent = items.length + ' saved pairing' + (items.length === 1 ? '' : 's');
+      if (items.length === 0) {
+        cardsEl.innerHTML = `<div class="empty">No saved pairings yet. Start from the <a href="/library">library</a> or <a href="/saved/new">add one manually</a>.</div>`;
+        return;
+      }
+      cardsEl.innerHTML = items.map(p => {
+        const tried = !!p.tried_at;
+        const wine = escapeHtml((p.wine || '').split('(')[0].trim()) || '(no wine)';
+        return `
+        <article class="card" data-id="${p.id}">
+          <span class="source-badge ${escapeHtml(p.source)}">${escapeHtml(sourceLabel(p.source))}</span>
+          <div class="card-wine">${wine}</div>
+          <div class="card-dish">${escapeHtml(p.dish || '')}</div>
+          ${p.molecule_logic ? `<div class="card-logic">${escapeHtml(p.molecule_logic)}</div>` : ''}
+          ${p.wine_examples ? `<div class="card-examples">${escapeHtml(p.wine_examples)}</div>` : ''}
+          <div class="notes-area">
+            <label for="notes-${p.id}">My notes</label>
+            <textarea id="notes-${p.id}" data-role="notes" placeholder="Why you saved this, how it tasted, pairing variations…">${escapeHtml(p.user_notes || '')}</textarea>
+          </div>
+          <div class="card-footer">
+            <button class="tried-pill ${tried ? 'on' : ''}" data-role="tried">${tried ? '✓ Tried' : 'Mark as tried'}</button>
+            <div class="actions">
+              <button class="link-btn" data-role="save-notes">Save notes</button>
+              <button class="link-btn danger" data-role="delete">Delete</button>
+            </div>
+          </div>
+        </article>
+      `;
+      }).join('');
+    }
+
+    async function load() {
+      try {
+        const data = await api('/api/saved');
+        renderCards(data.saved || []);
+      } catch (err) {
+        if (err.message !== 'unauthorized') {
+          cardsEl.innerHTML = '<div class="empty" style="color:var(--error)">Could not load saved pairings.</div>';
+        }
+      }
+    }
+
+    cardsEl.addEventListener('click', async (e) => {
+      const card = e.target.closest('.card[data-id]');
+      if (!card) return;
+      const id = card.dataset.id;
+      const role = e.target.dataset.role;
+
+      if (role === 'delete') {
+        if (!confirm('Delete this saved pairing?')) return;
+        e.target.disabled = true;
+        try {
+          await api('/api/saved/' + id, { method: 'DELETE' });
+          flash('Deleted.');
+          await load();
+        } catch (err) {
+          e.target.disabled = false;
+          flash(err.message || 'Delete failed', 'error');
+        }
+        return;
+      }
+
+      if (role === 'save-notes') {
+        const ta = card.querySelector('textarea[data-role="notes"]');
+        if (!ta) return;
+        e.target.disabled = true;
+        try {
+          await api('/api/saved/' + id, {
+            method: 'PATCH',
+            body: JSON.stringify({ user_notes: ta.value }),
+          });
+          flash('Notes saved.');
+        } catch (err) {
+          flash(err.message || 'Could not save notes', 'error');
+        } finally {
+          e.target.disabled = false;
+        }
+        return;
+      }
+
+      if (role === 'tried') {
+        const pill = e.target;
+        const currentlyTried = pill.classList.contains('on');
+        pill.disabled = true;
+        try {
+          const next = currentlyTried ? '' : new Date().toISOString();
+          await api('/api/saved/' + id, {
+            method: 'PATCH',
+            body: JSON.stringify({ tried_at: next }),
+          });
+          pill.classList.toggle('on', !currentlyTried);
+          pill.textContent = currentlyTried ? 'Mark as tried' : '✓ Tried';
+          flash(currentlyTried ? 'Cleared.' : 'Marked as tried.');
+        } catch (err) {
+          flash(err.message || 'Could not update', 'error');
+        } finally {
+          pill.disabled = false;
+        }
+        return;
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>
